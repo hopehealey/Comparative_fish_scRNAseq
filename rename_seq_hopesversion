@@ -1,0 +1,128 @@
+#!/bin/python 
+
+print("Hi Hope!")
+
+import argparse, os
+
+import pandas as pd, numpy as np
+from scipy import sparse
+from scipy.io import mmread, mmwrite
+from zipfile import ZipFile 
+
+
+parser=argparse.ArgumentParser()
+parser.add_argument('--cellranger', help='Path to CellRanger output directory (filtered_feature_bc_matrix/)')
+#parser.add_argument('--features',help='Path to CellRanger output features file')
+#parser.add_argument('--matrix', help='Path to CellRanger output matrix file')
+parser.add_argument('--orthologs',help='Path to ortholog inference output')
+parser.add_argument('--sp',help='Identifier for source species (the one the scRNAseq data came from)')
+parser.add_argument('--st',help='Identifier for target species (the one whose gene names you want to use)')
+parser.add_argument('--sb',help='Identifier for the species that is the second name reference')
+parser.add_argument('--out',help='directory to output new "features.tsv.gz" and "matrix.mtx.gz" files to')
+args=parser.parse_args()
+
+################## Gathering Ortholog Information: selecting the genes for the next steps ####################
+
+with open(args.orthologs, 'r') as orthos:
+    for i in orthos:
+        current_feature = i.strip(",").split()
+        ### getting indices of the species 
+
+        ## focal species (i.e. the one whose data you are using)
+        print(args.sp)
+        sp_index = '"' + args.sp + '"'
+        #print(sp_index)
+        sp_index = (current_feature.index(sp_index))
+
+        ## the species that is the name reference 
+        print(args.st)
+        st_index = '"' + args.st + '"'
+        print(st_index)
+        st_index = (current_feature.index(st_index))
+
+        ## the species that is the second name reference 
+        print(args.sb)
+        sb_index = '"' + args.sb + '"'
+        print(sb_index)
+        sb_index = (current_feature.index(sb_index))
+        break
+        ###
+        #if len(current_feature[1]) > 2:
+         #   pass
+        #    print(current_feature)
+    
+print(st_index, sb_index, sp_index)
+
+## 
+new_names = {}
+## new names key is the data species gene name
+## new names value is the "new" name of the gene
+name_guide = {}
+#name guide key is the data species gene name
+#name guide value is the species index that the name originated from
+
+
+with open(args.orthologs, 'r') as orthos:
+    next(orthos)
+    for i in orthos:
+        current_feature = i.strip(",").split()
+
+        ## Specifying so the name reference names the gene for the focal
+        ## only if name reference is a single ortholog
+        if len(current_feature[st_index]) > 2 and len(current_feature[sp_index]) > 2 and "," not in current_feature[st_index]:
+           #if the data species has multiple orthologs, then keep those names!
+           if "," in current_feature[sp_index]:
+            names = current_feature[sp_index].strip('"').split(",")
+            for j in names:
+               new_names[j] = j
+               name_guide[j]=sp_index
+           #if 1:1 match, go to reference name of the gene
+           else: 
+            new_names[current_feature[sp_index].strip('"')] = current_feature[st_index].strip('"')
+            name_guide[current_feature[sp_index].strip('"')]= st_index
+
+        ## now allowing the second choice reference
+        elif len(current_feature[sb_index]) > 2 and len(current_feature[sp_index]) > 2:
+           #if the data species has multiple orthologs, then keep those names!
+           #If multiple orthologs present, keep the data species names 
+            if "," in current_feature[sp_index] or "," in current_feature[sb_index]:
+                names = current_feature[sp_index].strip('"').split(",")
+                for j in names:
+                    new_names[j] = j
+                    name_guide[j]=sp_index
+            ## otherwise, go with "second" choice reference names
+            else:
+                new_names[current_feature[sp_index].strip('"')] = current_feature[sb_index].strip('"')
+                name_guide[current_feature[sp_index].strip('"')]=sb_index
+
+        #Allow for "third" choice name
+        elif len(current_feature[sp_index]) > 2:
+           # if multiple genes
+            if "," in current_feature[sp_index]:
+                names = current_feature[sp_index].strip('"').split(",")
+                for j in names:
+                    new_names[j] = j
+                    name_guide[j]=sp_index
+           # if single gene
+            else:
+                new_names[current_feature[sp_index].strip('"')] = current_feature[sp_index].strip('"')
+                name_guide[current_feature[sp_index].strip('"')]=sp_index
+
+print(new_names)
+
+############################ Parsing the cell ranger data ###########################
+## NO GENES ARE REMOVED - ONLY RENAMED
+
+feat=pd.read_csv(os.path.join(args.cellranger, 'features.tsv.gz'), sep='\t', header=None)
+print(feat)
+
+for gene in new_names:
+    #finding the location of the old name and replacing it in line
+    feat[0].replace(gene, new_names[gene], inplace=True)
+    feat[1].replace(gene, new_names[gene], inplace=True)
+
+print(feat)
+
+# outputting the data
+feat.to_csv(os.path.join(args.out, 'features.tsv'), sep='\t', index=False, header=False)
+os.system('gzip '+os.path.join(args.out, 'features.tsv'))
