@@ -1,0 +1,777 @@
+---
+title: "240405_Cluster_Annotations"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pulling in libraries
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(ggplot2)
+library(dplyr)
+library(scCustomize)
+```
+
+
+```{r}
+Bestfishes <- readRDS("../06_Cluster_Analysis/240418_zebrafish_stickleback_pipefish_subsetted_integrated40_1.9res.rds")
+Bestfishes
+
+Bestfishes <- FindNeighbors(Bestfishes, dims = 1:40, verbose = FALSE, reduction = "integrated.cca")
+Bestfishes <- FindClusters(Bestfishes, verbose = TRUE, resolution = 1.9, cluster.name = "int_cca_1.9res")
+Bestfishes <- RunUMAP(Bestfishes, dims = 1:40, reduction = "integrated.cca", reduction.name = "cca.umap.40PCs")
+DimPlot(Bestfishes, group.by = c("int_cca_1.9res"), reduction = "cca.umap.40PCs", label=TRUE) + ggtitle("All CCA Integration Data, Res 1.9, 40 PCs")
+DimPlot_scCustom(Bestfishes, reduction="cca.umap.40PCs", group.by = "int_cca_1.9res", label=TRUE)
+DimPlot_scCustom(Bestfishes, reduction="cca.umap.40PCs", group.by = "fish", label=TRUE)
+
+Lisiscores <- read.csv("240415_40PCs_1.9res_Integrated_dataset_CCAlisi_scores.csv")
+Bestfishes@meta.data$fish_scores <- Lisiscores$fish
+Bestfishes@meta.data$cluster_scores <- Lisiscores$seurat_clusters
+
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "fish_scores", na_cutoff = 1.01, order=FALSE) + ggtitle("CCA Integration: Species Integration LISI Scores")
+
+ggplot(Bestfishes@meta.data, aes(x=seurat_clusters, y=fish_scores, fill=seurat_clusters)) + 
+    geom_boxplot() + theme(legend.position="none")
+
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "cluster_scores", na_cutoff = 1.01, order=FALSE) + ggtitle("CCA Integration: Species Integration LISI Scores")
+
+ggplot(Bestfishes@meta.data, aes(x=seurat_clusters, y=cluster_scores, fill=seurat_clusters)) + 
+    geom_boxplot() + theme(legend.position="none")
+
+saveRDS(Bestfishes,"240418_zebrafish_stickleback_pipefish_subsetted_integrated40_1.9res.rds")
+
+### Saving plots
+pdf("240808_LISI_cluster_distinctness_integration_scores.pdf", width = 10)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "cluster_scores", na_cutoff = 1.01, order=FALSE) + ggtitle("CCA Integration: Species Integration LISI Scores")
+dev.off()
+
+pdf("240808_LISI_species_integration_scores.pdf", width = 10)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "fish_scores", na_cutoff = 1.01, order=FALSE) + ggtitle("CCA Integration: Species Integration LISI Scores")
+dev.off()
+```
+
+I picked out the top 10-15 marker genes for each cluster and am examining each of them to figure out the most specific markers for each cluster then confirm cluster annotations.
+
+## Cluster 0
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("nkx2.9", "robo4","ntn1a","plp1a", "heyl","npas1","sulf2a","sox19b","lrp2a","notch3","ntn1b","wfikkn1","fam181b","scube2","qki2","s1pr1","vwa7","gbx1","cyp26b1","nkx2.2a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 0: Marker Genes")
+
+DotPlot(Bestfishes, features = c("nkx2.9", "robo4","ntn1a","plp1a", "heyl","npas1","sulf2a","sox19b","lrp2a","notch3","ntn1b","wfikkn1","fam181b","scube2","qki2","s1pr1","vwa7","gbx1","cyp26b1","nkx2.2a"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="0") + ggtitle("Cluster 0: Marker Genes")
+
+```
+## Cluster 1
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("sfrp2","prrx1b","foxf1","tcf21","tbx1","glt8d2","snai2","myf5","gstt1a","scxb","tmem119b","ecrg4a","erbb3b","grem1b","dkk2","foxl2a","tmem98","hoxa13b","fgf10a","antxr1c","bmp7b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 1: Marker Genes")
+
+DotPlot(Bestfishes, features = c("sfrp2","prrx1b","foxf1","tcf21","tbx1","glt8d2","snai2","myf5","gstt1a","scxb","tmem119b","ecrg4a","erbb3b","grem1b","dkk2","foxl2a","tmem98","hoxa13b","fgf10a","antxr1c","bmp7b"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="1",dot.min = .01) + ggtitle("Cluster 1: Marker Genes")
+```
+
+## Cluster 2
+
+col11a1b	fmoda	alx4a	jcada	alx1	pmp22a	fibina	pitx2	cldn11a	ccbe1	cspg4	lamc3
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("alx3","ccl25b","fstl3","osr2","lamc3","pcolcea","foxc1a","alx4b","lama2","pdgfra","col6a3","twist1a","col11a1b","fmoda","alx4a","jcada","alx1","pmp22a","fibina","pitx2","cldn11a","ccbe1","csg4"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 2: Marker Genes")
+
+DotPlot(Bestfishes, features = c("alx3","ccl25b","fstl3","osr2","lamc3","pcolcea","foxc1a","alx4b","lama2","pdgfra","col6a3","twist1a","col11a1b","fmoda","alx4a","jcada","alx1","pmp22a","fibina","pitx2","cldn11a","ccbe1","csg4"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="2",dot.min = .01) + ggtitle("Cluster 2: Marker Genes")
+
+```
+
+## Cluster 3
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("acyp2","rx2","rx1","vsx2","rorb","ephb2a","foxg1d","fzd5","foxn4","ephb6","crip3","tbx2b","atoh7","zgc:110045","tbx5b","sox18","ascl1a","vax2","vsx1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 3: Marker Genes")
+
+DotPlot(Bestfishes, features = c("acyp2","rx2","rx1","vsx2","rorb","ephb2a","foxg1d","fzd5","foxn4","ephb6","crip3","tbx2b","atoh7","zgc:110045","tbx5b","sox18","ascl1a","vax2","vsx1"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="3",dot.min = .01) + ggtitle("Cluster 3: Marker Genes")
+
+```
+
+## Cluster 4
+
+ndst3	gsx1	cy26b1	robo4	sp8b	sox19b	ccne2	sox3	sp8a
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("gfap","her8a","her2","c4b","sox21a","her15.1","her12","pax6a","pou3f3a","foxb1a","auts2b","ptprz1a","ndst3","gsx1","cy26b1","robo4","sp8b","sox19b","ccne2","sox3","sp8a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 4: Marker Genes")
+
+DotPlot(Bestfishes, features = c("gfap","her8a","her2","c4b","sox21a","her15.1","her12","pax6a","pou3f3a","foxb1a","auts2b","ptprz1a","ndst3","gsx1","cy26b1","robo4","sp8b","sox19b","ccne2","sox3","sp8a"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="4",dot.min = .01) + ggtitle("Cluster 4: Marker Genes")
+
+```
+
+## Cluster 5
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("nhlh2","scrt1a","kazna","robo3","adcyap1b","gdf11","elavl3","pdlim5a","insm1b","mtcl1","jagn1a","adam22","evx2","chia.1","atoh1b","soga3","onecutl","scrt2","lhx4","pax2b","nkx1.2la","lhx9","barhl1b","neurod1","bhlhe22"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 5: Marker Genes")
+
+DotPlot(Bestfishes, features = c("nhlh2","scrt1a","kazna","robo3","adcyap1b","gdf11","elavl3","pdlim5a","insm1b","mtcl1","jagn1a","adam22","evx2","chia.1","atoh1b","soga3","onecutl","scrt2","lhx4","pax2b","nkx1.2la","lhx9","barhl1b","neurod1","bhlhe22"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="5",dot.min = .01) + ggtitle("Cluster 5: Marker Genes")
+
+```
+
+## Cluster 6
+
+si:dkeyp-92c9.2	her13	cep131	ptf1a	dbx1a	cdkn1ca
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("neurog1","dla","dld","ascl1b","gadd45gb.1","neurod4","her8.2","notch1a","syne2b","sertad2a","prdm13", "si:dkeyp-92c9.2","her13","cep131","ptf1a","dbx1a","cdkn1ca"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 6: Marker Genes")
+
+DotPlot(Bestfishes, features = c("neurog1","dla","dld","ascl1b","gadd45gb.1","neurod4","her8.2","notch1a","syne2b","sertad2a","prdm13", "si:dkeyp-92c9.2","her13","cep131","ptf1a","dbx1a","cdkn1ca"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="6",dot.min = .01) + ggtitle("Cluster 6: Marker Genes")
+
+```
+
+## Cluster 7
+
+fgf22	si:dkey-237h12.3	nkx2.4a	lix1	pax7a	wnt7bb	nkx2.4b	dmbx1a
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("en2b","pax5","myca","sox19a","fezf2","ndst2b","pax7b","efna2a","efna2b","en2a","vax2","fzd5","fgf22","si:dkey-237h12.3","nkx2.4a","lix1","pax7a","wnt7bb","nkx2.4b","dmbx1a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 7: Marker Genes")
+
+DotPlot(Bestfishes, features = c("en2b","pax5","myca","sox19a","fezf2","ndst2b","pax7b","efna2a","efna2b","en2a","vax2","fzd5","fgf22","si:dkey-237h12.3","nkx2.4a","lix1","pax7a","wnt7bb","nkx2.4b","dmbx1a"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="7",dot.min = .01) + ggtitle("Cluster 7: Marker Genes")
+
+```
+
+## Cluster 8
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("hbbe1.1","hbbe2","hbae3","hemgn","hbae5","epb41b","hif1al2","drl","parm1","nt5c2l1","glipr2","ripor3","tubb1",	"gata1a", "cahz",	"rfesd","alas2",	"slc4a1a",	"epor",	"gp9"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 8: Marker Genes")
+
+DotPlot(Bestfishes, features = c("hbbe1.1","hbbe2","hbae3","hemgn","hbae5","epb41b","hif1al2","drl","parm1","nt5c2l1","glipr2","ripor3","tubb1",	"gata1a", "cahz",	"rfesd","alas2",	"slc4a1a",	"epor",	"gp9"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="8",dot.min = .01) + ggtitle("Cluster 8: Marker Genes")
+
+```
+
+
+
+## Cluster 9
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("olig3","atoh1a","egr2b","msx1b","zic5","olig4","msx3","zic1","pax3a","zic2a","zic4","wnt1","wnt10b","atoh1b","casz1","gdf10a","gsx2","wnt3a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 9: Marker Genes")
+
+DotPlot(Bestfishes, features = c("olig3","atoh1a","egr2b","msx1b","zic5","olig4","msx3","zic1","pax3a","zic2a","zic4","wnt1","wnt10b","atoh1b","casz1","gdf10a","gsx2","wnt3a"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="9",dot.min = .01) + ggtitle("Cluster 9: Marker Genes")
+
+```
+
+
+## Cluster 10
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("LOC120827722","galce","gahce1","anapc11","drg2","dcaf7","epn2"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 10: Marker Genes")
+
+DotPlot(Bestfishes, features = c("LOC120827722","galce","gahce1","anapc11","drg2","dcaf7","epn2"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="10",dot.min = .01) + ggtitle("Cluster 10: Marker Genes")
+
+```
+
+## Cluster 11
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("slc1a6","klf1","epor","dmtn.1","slc4a1a","alas2","cahz","blvrb","stc1","asz1","fam78ab","tfr1a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 11: Marker Genes")
+
+DotPlot(Bestfishes, features = c("slc1a6","klf1","epor","dmtn.1","slc4a1a","alas2","cahz","blvrb","stc1","asz1","fam78ab","tfr1a"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="11",dot.min = .01) + ggtitle("Cluster 11: Marker Genes")
+
+```
+
+## Cluster 12
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("cbln1","tub","eno2","grin1a","cntn4","brinp1","cplx2l","elavl4","prph","sv2a","efna2a","cacna1aa"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 12: Marker Genes")
+
+DotPlot(Bestfishes, features = c("cbln1","tub","eno2","grin1a","cntn4","brinp1","cplx2l","elavl4","prph","sv2a","efna2a","cacna1aa"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="12",dot.min = .01) + ggtitle("Cluster 12: Marker Genes")
+
+```
+
+## Cluster 13
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("rx1","vsx2","hspe1","eef1akmt1","metap2b","prps1a","snu13b","qdprb1","utp25","wdr43","npm3","fbl","eif4ebp1","cmss1","tktb","emg1","aamp"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 13: Marker Genes")
+
+DotPlot(Bestfishes, features = c("rx1","vsx2","hspe1","eef1akmt1","metap2b","prps1a","snu13b","qdprb1","utp25","wdr43","npm3","fbl","eif4ebp1","cmss1","tktb","emg1","aamp"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish",idents="13",dot.min = .01) + ggtitle("Cluster 13: Marker Genes")
+
+```
+## Cluster 14
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("fabp11a","hmx4","zic6","zic4","pnpla7b","kirrel3a","otc","otx1","zic5","cldn11a","tfpi2","cx43"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 14: Marker Genes")
+
+DotPlot(Bestfishes, features = c("fabp11a","hmx4","zic6","zic4","pnpla7b","kirrel3a","otc","otx1","zic5","cldn11a","tfpi2","cx43"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="14",dot.min = .01) + ggtitle("Cluster 14: Marker Genes")
+
+```
+## Cluster 15
+
+fgl1	scara3	nkx3-1	itgbl1	ntn5
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("vwde","pi15a","cilp","tcf15","fap","angptl7","meox1","fmoda","pax1a","pdgfrl","col6a1","cdh10a","fgl1","scara3","nkx3-1","itgbl1","ntn5"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 15: Marker Genes")
+
+DotPlot(Bestfishes, features = c("vwde","pi15a","cilp","tcf15","fap","angptl7","meox1","fmoda","pax1a","pdgfrl","col6a1","cdh10a","fgl1","scara3","nkx3-1","itgbl1","ntn5"), cols = c("cyan","green","hotpink"), assay = "SCT",split.by="fish",idents="15") + ggtitle("Cluster 15: Marker Genes")
+
+```
+
+## Cluster 16
+
+hand2	foxf1	foxc1b	twist1a	tmem119b	emx2
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("barx1","dlx6a","dlx5a","dlx2a","sox9a","grem2b","lhx6","dlx4a","ednraa","sema3bl","cspg4","itga8","hand2","foxf1","foxc1b","twist1a","tmem199b","emx2"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 16: Marker Genes")
+
+DotPlot(Bestfishes, features = c("barx1","dlx6a","dlx5a","dlx2a","sox9a","grem2b","lhx6","dlx4a","ednraa","sema3bl","cspg4","itga8","hand2","foxf1","foxc1b","twist1a","tmem199b","emx2"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish",idents="16") + ggtitle("Cluster 16: Marker Genes")
+
+```
+
+## Cluster 17
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("alas2","blvrb","tm4sf5","kctd7","mcoln2","tagln3b","slc6a17","slc16a13","dck","cahz","fam78ab","slc4a1a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 17: Marker Genes")
+
+DotPlot(Bestfishes, features = c("alas2","blvrb","tm4sf5","kctd7","mcoln2","tagln3b","slc6a17","slc16a13","dck","cahz","fam78ab","slc4a1a"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="17",split.by="fish") + ggtitle("Cluster 17: Marker Genes")
+
+```
+
+## Cluster 18
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("lamb4","aqp3a","cldni","ecrg4b","cldn1","kera","col7a1","spaca4l","myh9a","col28a2a","fermt1","tp63"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 18: Marker Genes")
+
+DotPlot(Bestfishes, features = c("lamb4","aqp3a","cldni","ecrg4b","cldn1","kera","col7a1","spaca4l","myh9a","col28a2a","fermt1","tp63"), cols = c("cyan","green","hotpink"), assay = "SCT",idents="18",split.by="fish") + ggtitle("Cluster 18: Marker Genes")
+
+```
+
+## Cluster 19 
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("tal2","slc6a1b","zfpm2a","gad1b","nrxn3a","gad2","slc32a1","znf385c","dscamb","gata2a","lhx1a","dscama"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 19: Marker Genes")
+
+DotPlot(Bestfishes, features = c("tal2","slc6a1b","zfpm2a","gad1b","nrxn3a","gad2","slc32a1","znf385c","dscamb","gata2a","lhx1a","dscama"), cols = c("cyan","green","hotpink"), assay = "SCT",idents="19",split.by="fish") + ggtitle("Cluster 19: Marker Genes")
+
+```
+
+## Cluster 20 
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("apoc2","apoa2","apoea","fetub","rbp2a","cidec","fbp1b","rbp4","acp5a","aldob","pla2g15"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 20: Marker Genes")
+
+DotPlot(Bestfishes, features = c("apoc2","apoa2","apoea","fetub","rbp2a","cidec","fbp1b","rbp4","acp5a","aldob","pla2g15"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="20",split.by="fish") + ggtitle("Cluster 20: Marker Genes")
+
+```
+## Cluster 21
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("dmtn.1","slc1a6","dck","blvrb","tubb1","kynu","gfi1b","cahz","rnf151","uros","klf17","rfesd"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 21: Marker Genes")
+
+DotPlot(Bestfishes, features = c("dmtn.1","slc1a6","dck","blvrb","tubb1","kynu","gfi1b","cahz","rnf151","uros","klf17","rfesd"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="21",split.by="fish") + ggtitle("Cluster 21: Marker Genes")
+
+```
+
+## Cluster 22 
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("gp9","dmtn.1","gfi1b","s1pr3a","rfesd","ikzf1","mastl","epor","jak2a","klf17","clic2"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 22: Marker Genes")
+
+DotPlot(Bestfishes, features = c("gp9","dmtn.1","gfi1b","s1pr3a","rfesd","ikzf1","mastl","epor","jak2a","klf17","clic2"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="22",split.by="fish") + ggtitle("Cluster 22: Marker Genes")
+
+```
+
+## Cluster 23
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("agr1","stx11b.1","b3gnt3.3","adipor1b","anxa1b","cldn23a","selenow2b","sft2d2a","fut9b", "cmah", "krt5","krt17","icn2"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 23: Marker Genes")
+
+DotPlot(Bestfishes, features = c("agr1","stx11b.1","b3gnt3.3","adipor1b","anxa1b","cldn23a","selenow2b","sft2d2a","fut9b", "cmah", "krt5","krt17","icn2"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish",idents="23") + ggtitle("Cluster 23: Marker Genes")
+
+```
+
+## Cluster 24
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("mrc1a","stab2","cldn5b","myct1a","gpr182","tie1","rasip1","egfl7","yrk","aqp8a.1","plvapb","tek"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 24: Marker Genes")
+
+DotPlot(Bestfishes, features = c("mrc1a","stab2","cldn5b","myct1a","gpr182","tie1","rasip1","egfl7","yrk","aqp8a.1","plvapb","tek"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="24", split.by="fish") + ggtitle("Cluster 24: Marker Genes")
+
+```
+
+## Cluster 25
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("myhz1.2","pvalb1","myhz1.1","casq1a","tnnt3b","mylpfa","mylz3","tnnt3a","myl1","myoz1b","tnnc2","ckma","tcap","klhl43","mybphb"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 25: Marker Genes")
+
+DotPlot(Bestfishes, features = c("myhz1.2","pvalb1","myhz1.1","casq1a","tnnt3b","mylpfa","mylz3","tnnt3a","myl1","myoz1b","tnnc2","ckma","tcap","klhl43","mybphb"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="25", split.by="fish") + ggtitle("Cluster 25: Marker Genes")
+
+```
+
+## Cluster 26
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("nipal2","cldnh","agr2","bik","sigirr","chmp4c","nqo1","oclna","esrp2","irf6","gipc2","ap1s3b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 26: Marker Genes")
+
+DotPlot(Bestfishes, features = c("nipal2","cldnh","agr2","bik","sigirr","chmp4c","nqo1","oclna","esrp2","irf6","gipc2","ap1s3b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="26",split.by="fish") + ggtitle("Cluster 26: Marker Genes")
+
+```
+
+## Cluster 27
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("mymk","myog","hsp90aa1.1","fbxl22","cdh15","efemp2a","actc1a","flncb","obsl1b","megf10","klhl40b","unc45b","pabpc4"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 27: Marker Genes")
+
+DotPlot(Bestfishes, features = c("mymk","myog","hsp90aa1.1","fbxl22","cdh15","efemp2a","actc1a","flncb","obsl1b","megf10","klhl40b","unc45b","pabpc4"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="27",split.by="fish") + ggtitle("Cluster 27: Marker Genes")
+
+```
+
+## Cluster 28
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("nkx2.7","fgfrl1b","frem2a","vgll4l","ptprfa","fermt1","zgc:92380","tmem238a","lsr","tp63","epcam","cldn7b","cd9b","cfl1l"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 28: Marker Genes")
+
+DotPlot(Bestfishes, features = c("nkx2.7","fgfrl1b","frem2a","vgll4l","ptprfa","fermt1","zgc:92380","tmem238a","lsr","tp63","epcam","cldn7b","cd9b","cfl1l"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="28",split.by="fish") + ggtitle("Cluster 28: Marker Genes")
+
+```
+
+## Cluster 29
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("lhx9","barhl2","slc17a6b","dscaml1","mtss1lb","islr2","lhx2b","adcyap1b","lgi1b","gpr85","cxxc4"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 29: Marker Genes")
+
+DotPlot(Bestfishes, features = c("lhx9","barhl2","slc17a6b","dscaml1","mtss1lb","islr2","lhx2b","adcyap1b","lgi1b","gpr85","cxxc4"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="29",split.by="fish") + ggtitle("Cluster 29: Marker Genes")
+
+```
+
+## Cluster 30
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("cybb","spi1b","irf8","dock2","plxnc1","tnfsf12","ncf1","ptprc","ccl34a.4","cfbl","mfap4","fcer1gl","alox5ap","slc2a6","ltb4r","lygl1","mpx","grap2b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 30: Marker Genes")
+
+DotPlot(Bestfishes, features = c("cybb","spi1b","irf8","dock2","plxnc1","tnfsf12","ncf1","ptprc","ccl34a.4","cfbl","mfap4","fcer1gl","alox5ap","slc2a6","ltb4r","lygl1","mpx","grap2b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="30",split.by="fish") + ggtitle("Cluster 30: Marker Genes")
+
+```
+
+## Cluster 31
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("otpa","otpb","pax2b","lhx1a","stap2a","pax2a","olig4","trim67","napba","mark4a","cnih2"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 31: Marker Genes")
+
+DotPlot(Bestfishes, features = c("otpa","otpb","pax2b","lhx1a","stap2a","pax2a","olig4","trim67","napba","mark4a","cnih2"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="31", split.by="fish") + ggtitle("Cluster 31: Marker Genes")
+
+```
+
+## Cluster 32
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("arxb","dlx2b","sp9","arxa","dlx2a","lhx8a","nkx2.1","dlx5a","dlx6a","vax1","nrxn3a","sox1b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 32: Marker Genes")
+
+DotPlot(Bestfishes, features = c("arxb","dlx2b","sp9","arxa","dlx2a","lhx8a","nkx2.1","dlx5a","dlx6a","vax1","nrxn3a","sox1b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="32", split.by="fish") + ggtitle("Cluster 32: Marker Genes")
+
+```
+
+## Cluster 33
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("helt","gpr37l1b","crabp1a","gsx1","nkx2.2a","otx2","sox19b","ago1","notch1b","hs3st1l2","robo4"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 33: Marker Genes")
+
+DotPlot(Bestfishes, features = c("helt","gpr37l1b","crabp1a","gsx1","nkx2.2a","otx2","sox19b","ago1","notch1b","hs3st1l2","robo4"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="33") + ggtitle("Cluster 33: Marker Genes")
+
+```
+
+## Cluster 34
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("LOC120821961","pax10","prdm13","ephb6","syn1","cplx2l","rai1","kcnc3a","atp1a3a","stx1b","gng3","amph","atl1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 34: Marker Genes")
+
+DotPlot(Bestfishes, features = c("LOC120821961","pax10","prdm13","ephb6","syn1","cplx2l","rai1","kcnc3a","atp1a3a","stx1b","gng3","amph","atl1"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="34", split.by="fish") + ggtitle("Cluster 34: Marker Genes")
+
+```
+
+## Cluster 35
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("snorc","paqr4b","cnmd","tbxta","col8a1a","loxl5b","susd5","matn4","gas2b","col2a1b","col9a2","col9a3"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 35: Marker Genes")
+
+DotPlot(Bestfishes, features = c("snorc","paqr4b","cnmd","tbxta","col8a1a","loxl5b","susd5","matn4","gas2b","col2a1b","col9a2","col9a3"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="35") + ggtitle("Cluster 35: Marker Genes")
+
+```
+
+## Cluster 36
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("shha","arxa","npr3","wnt8b","bicc2","foxa1","lmx1ba","efcab2","enkur","ntn1b","lrrc6"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 36: Marker Genes")
+
+DotPlot(Bestfishes, features = c("shha","arxa","npr3","wnt8b","bicc2","foxa1","lmx1ba","efcab2","enkur","ntn1b","lrrc6"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="36") + ggtitle("Cluster 36: Marker Genes")
+
+```
+
+## Cluster 37
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("lmx1bb","lmx1a","ttc12","zic5","daw1","zic6","proca1","gdpd5a","gdf6a","bmp5","hepacama", "LOC120816582"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 37: Marker Genes")
+
+DotPlot(Bestfishes, features = c("lmx1bb","lmx1a","ttc12","zic5","daw1","zic6","proca1","gdpd5a","gdf6a","bmp5","hepacama", "LOC120816582"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="37", split.by="fish") + ggtitle("Cluster 37: Marker Genes")
+
+```
+
+## Cluster 38
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("LOC120822041","oca2","slc24a5","tyrp1b","dct","pmela","slc24a4a","mchr2","slc45a2","mical3b","slc38a11"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 38: Marker Genes")
+
+DotPlot(Bestfishes, features = c("LOC120822041","oca2","slc24a5","tyrp1b","dct","pmela","slc24a4a","mchr2","slc45a2","mical3b","slc38a11"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="38",split.by="fish") + ggtitle("Cluster 38: Marker Genes")
+
+```
+
+## Cluster 39
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("tfr1a","sptb","slc25a37","hdr","klf1","rhag","alas2","pigq","hmbsb","blvrb"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 39: Marker Genes")
+
+DotPlot(Bestfishes, features = c("tfr1a","sptb","slc25a37","hdr","klf1","rhag","alas2","pigq","hmbsb","blvrb"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish",idents="39") + ggtitle("Cluster 39: Marker Genes")
+
+```
+
+## Cluster 40
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("gch2","slc2a15b","aox5","tmem130","slc22a7a","bscl2l","pts","cax1","mocos","gpr143"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 40: Marker Genes")
+
+DotPlot(Bestfishes, features = c("gch2","slc2a15b","aox5","tmem130","slc22a7a","bscl2l","pts","cax1","mocos","gpr143"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="40",split.by = "fish") + ggtitle("Cluster 40: Marker Genes")
+
+```
+
+## Cluster 41
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("neurod1","cdh6","six1b","cerkl","pkdcca","inka1a","onecut1","ebf1a","neurod4","eya1","nanos1","stk25a", "ntrk1", "sez6l","zgc:158291","BX664603.1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 41: Marker Genes")
+
+DotPlot(Bestfishes, features = c("neurod1","cdh6","six1b","cerkl","pkdcca","inka1a","onecut1","ebf1a","neurod4","eya1","nanos1","stk25a", "ntrk1", "sez6l","zgc:158291","BX664603.1"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="41", split.by="fish") + ggtitle("Cluster 41: Marker Genes")
+```
+
+## Cluster 42
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("jam2b","angptl6","bmp10","nr1h5","colec10","colec11","dpep1","gata6","c7b","acta2","tagln","csrp1b","krt94","sema3fb"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 42: Marker Genes")
+
+DotPlot(Bestfishes, features = c("jam2b","angptl6","bmp10","nr1h5","colec10","colec11","dpep1","gata6","c7b","acta2","tagln","csrp1b","krt94","sema3fb"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="42",split.by = "fish") + ggtitle("Cluster 42: Marker Genes")
+
+```
+
+## Cluster 43
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("snx22","apoda.1","gpnmb","lypc","pnp4a","akap12a","emp3b","nme4","gmps","ankrd33aa", "si:ch211-256m1.8", "ltk", "cecr1b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 43: Marker Genes")
+
+DotPlot(Bestfishes, features = c("snx22","apoda.1","gpnmb","lypc","pnp4a","akap12a","emp3b","nme4","gmps","ankrd33aa", "si:ch211-256m1.8", "ltk", "cecr1b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents="43",split.by="fish") + ggtitle("Cluster 43: Marker Genes")
+```
+
+## Cluster 44
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("tnni1c","tnnt2d","cyp4t8","smyhc1","smyhc3","tnni4b.2","smyhc2","myl10","pvalb4","myl13"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 44: Marker Genes")
+
+DotPlot(Bestfishes, features = c("tnni1c","tnnt2d","cyp4t8","smyhc1","smyhc3","tnni4b.2","smyhc2","myl10","pvalb4","myl13"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="44") + ggtitle("Cluster 44: Marker Genes")
+```
+
+## Cluster 45
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("lmod2b","nkx2.5","ryr2b","tnnt2a","myl7","cmlc1","tnni1b","myh7l","nppa","tnnc1a","pln"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 45: Marker Genes")
+
+DotPlot(Bestfishes, features = c("lmod2b","nkx2.5","ryr2b","tnnt2a","myl7","cmlc1","tnni1b","myh7l","nppa","tnnc1a","pln"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="45") + ggtitle("Cluster 45: Marker Genes")
+
+```
+
+## Cluster 46 
+
+```{r, fig.height=4}
+DotPlot(Bestfishes, features = c("lim2.3","crygmx","crygmxl2","lim2.1","endou2","cryba1l2","mipb","mipa","cx23","crygn2","lim2.4"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Cluster 46: Marker Genes")
+
+DotPlot(Bestfishes, split.by = "fish",features = c("lim2.3","crygmx","crygmxl2","lim2.1","endou2","cryba1l2","mipb","mipa","cx23","crygn2","lim2.4"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = "46") + ggtitle("Cluster 46: Marker Genes")
+
+```
+
+## And tying together all of the annotations (see excel file: 240403_40PC_1.9res_noFilt_Cluster_Annotatins)
+
+```{r}
+
+levels(Bestfishes@meta.data$seurat_clusters)
+
+mycolors <- c("0"="dodgerblue","1"="purple3","2"="orchid3","3"="darkslategray1","4"="darkslategray4","5"="cornflowerblue","6"="aquamarine","7"="cadetblue2","8"="tomato1","9"="darkblue","10"="gray","11"="darkred","12"="deepskyblue2","13"="grey30","14"="darkturquoise","15"="darkorchid2","16"="maroon3","17"="firebrick2", "18" ="lightpink","19"="cadetblue1","20"="gold","21"="red","22"="salmon1","23"="rosybrown2","24"="maroon4","25"="limegreen","26"="thistle2","27"="olivedrab3","28"="lightcoral","29"="darkcyan","30"="seashell3","31"="aquamarine4","32"="cyan3","33"="lightblue2","34"="blue2","35"="mediumpurple1","36"="dodgerblue4","37"="darkslateblue","38"="sienna3","39"="tomato3","40"="sandybrown","41"="dodgerblue2","42"="lightgoldenrod2","43"="gray25","44"="springgreen4","45"="springgreen3","46"="gray0")
+
+my_cols2 <- mycolors[order(as.integer(names(mycolors)))]
+scales::show_col(my_cols2)
+
+DimPlot(Bestfishes,
+        cols = my_cols2, label=TRUE, reduction="cca.umap.40PCs")
+
+```
+
+
+
+```{r, fig.width=10}
+mygenes <- c("nkx2.9","erbb3b","lamc3","rorb","her12","robo3","dld","en2b","gata1a"
+             ,"atoh1a","anapc11","slc4a1a","cntn4","wdr43","fabp11a","vwde","barx1"
+             ,"alas2","cldni","tal2","fbp1b","blvrb","mastl","stx11b.1","myct1a","myoz1b",
+             "chmp4c","myog","vgll4l","lhx9","cybb","otpa","sp9","helt","stx1b","snorc",
+             "arxa","lmx1bb","oca2","tfr1a","slc2a15b","ntrk1","angptl6","apoda.1","tnni1c",
+             "lmod2b","lim2.3")
+
+DotPlot(Bestfishes, features=mygenes)
+
+clus_colors <- c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2", "lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")
+
+info_for_geomtile <- data.frame(mygenes, mygenes, clus_colors)
+colnames(info_for_geomtile) <- c("gene_id", "gene_name", "cluster_color")
+
+
+
+info_for_geomtile2 <- data.frame(c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46), c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2", "lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0"))
+colnames(info_for_geomtile2) <- c("cluster_number", "cluster_color2")
+
+
+pdf("240726__marker_gene_dotplot_orgaizedbyCelltype_SCT.pdf", width=20, height=15)
+
+DotPlot(Bestfishes, features = mygenes, assay="SCT", dot.min=.05) + xlab("") + theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=90, hjust=1, size=20, vjust=.35),
+        axis.text.y = element_text(size=20), panel.grid = element_line(color = "grey94",
+                                  size = .1,
+                                  linetype = 2)) + 
+  scale_fill_identity() + scale_colour_gradient2(low = "papayawhip", mid = "plum1", high = "purple4", midpoint = 1) + geom_tile(data = info_for_geomtile, aes(x = mygenes, y = -.1, fill = cluster_color)) + geom_tile(data = info_for_geomtile2, aes(x = 0, y = cluster_number +1, fill = cluster_color2))
+
+dev.off()
+```
+
+## Danio cell marker genes for these distinct cell types
+
+```{r, fig.height=3, fig.width=3}
+DotPlot(Bestfishes, features = c("barx1","twist1a","grem2b","dlx5a","prrx1b","dlx2a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell pharyngeal arch marker genes (mese12)")
+
+DotPlot(Bestfishes, features = c("barx1","twist1a","grem2b","dlx5a","prrx1b","dlx2a"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="16") + ggtitle("Daniocell pharyngeal arch marker genes (mese12)")
+##
+
+DotPlot(Bestfishes, features = c("sntb2","emilin3a","col15a1a","apela","n3gnt7l","tbx3b","pak1","ntd5","inpp5b", "col8a1a","snorc","loxl2b","ehd2b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell notochord marker genes (axia12,17)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("sntb2","emilin3a","col15a1a","apela","n3gnt7l","tbx3b","pak1","ntd5","inpp5b", "col8a1a","snorc","loxl2b","ehd2b"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents="35") + ggtitle("Daniocell notochord marker genes (axia12,17)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+##
+
+DotPlot(Bestfishes, features = c("col7a1l","tp63","cldn1","col28a2a","thbs3a","ecrg4b","thy1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell epidermal marker genes (epid.14)")
+
+DotPlot(Bestfishes, features = c("col7a1l","tp63","cldn1","col28a2a","thbs3a","ecrg4b","thy1"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("18","23","26")) + ggtitle("Daniocell epidermal marker genes (epid.14)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+## 
+DotPlot(Bestfishes, features = c("he1.3","mir203","dsg2.1","capn9","anxa1b","evplb","evpla","nos1","osgn1","duox","cyp2y3","serpinb14"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell periderm marker genes (peri.20)")
+
+DotPlot(Bestfishes, features = c("he1.3","mir203","dsg2.1","capn9","anxa1b","evplb","evpla","nos1","osgn1","duox","cyp2y3","serpinb14"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("23","26")) + ggtitle("Daniocell periderm marker genes (peri5,20)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+##
+DotPlot(Bestfishes, features = c("sparcl1","slc7a11","fabp11a","tkta","foxe3","col28a1a","mgarp","tinagl1","crybb1","cryba4","cryba1b","mipb","lim2.4"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell lens marker genes (eye.25,34)")
+
+DotPlot(Bestfishes, features = c("sparcl1","slc7a11","fabp11a","tkta","foxe3","col28a1a","mgarp","tinagl1","crybb1","cryba4","cryba1b","mipb","lim2.4"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("46")) + ggtitle("Daniocell lens marker genes (eye.25,34)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+##
+DotPlot(Bestfishes, features = c("lyz","mmp13a","npsn","lect2l","mfap4","lygyll","ccl34a.4","mpeg1.1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell immune cell marker genes (hema10,12)")
+
+DotPlot(Bestfishes, features = c("lyz","mmp13a","npsn","lect2l","mfap4","lygyll","ccl34a.4","mpeg1.1"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("30")) + ggtitle("Daniocell immune cell marker genes (hema10,12)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+##
+DotPlot(Bestfishes, features = c("crestin","mitfa","phlda1","slc45a2","akr1b1","cx30.3","pax7a","pts","mcos1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell pigment precursor cell marker genes (pigm10,16)")
+
+DotPlot(Bestfishes, features = c("crestin","mitfa","phlda1","slc45a2","akr1b1","cx30.3","pax7a","pts","mcos1"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("38","40")) + ggtitle("Daniocell pigment precursor cell marker genes (pigm10,16)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+##
+DotPlot(Bestfishes, features = c("her1","tbx6","her7","tcf15","ripply1","msgn1","myf5","meox1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell somitic mesoderm marker genes (musc3, 4)")
+
+DotPlot(Bestfishes, features = c("her1","tbx6","her7","tcf15","ripply1","msgn1","myf5","meox1"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("15")) + ggtitle("Daniocell somitic mesoderm marker genes (musc3, 4)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+###
+
+DotPlot(Bestfishes, features = c("tfa","fabp10a","cyp1a","tmem70","lgals2b","cldn15la","cebpa","hoxb1b","fgfrl1b","limk2","gata6"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell endodermal marker genes (endo5,9,27)") +  theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("tfa","fabp10a","cyp1a","tmem70","lgals2b","cldn15la","cebpa","hoxb1b","fgfrl1b","limk2","gata6"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("20")) + ggtitle("Daniocell endodermal marker genes (endo5,9,27)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+###
+DotPlot(Bestfishes, features = c("myog", "mymk","filip1a","jam2a","tnni2b.1","tgm2a","rbfox1l","tmx2a","fitm1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell somite (diff into muscle) marker genes (musc10,27)")+ theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("myog", "mymk","filip1a","jam2a","tnni2b.1","tgm2a","rbfox1l","tmx2a","fitm1"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("20")) + ggtitle("Daniocell somite (diff into muscle) marker genes (musc10,27)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+## 
+
+DotPlot(Bestfishes, features = c("pax1b","fgfbp1b","mir205","fgf20b","egfl6","cldn1","nkx2.3","six1b"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell pharyngeal pouch marker genes (epi16)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("pax1b","fgfbp1b","mir205","fgf20b","egfl6","cldn1","nkx2.3","six1b"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("28")) + ggtitle("Daniocell pharyngeal pouch marker genes (epi16)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+## --- These are not good ---
+DotPlot(Bestfishes, features = c("ednrab","snai1b","cyth1b","twist1a","inka1a","foxd3","sox10","hspg2","scn4ab","mcamb"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell neural crest marker genes (neu 37,47)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("ednrab","snai1b","cyth1b","twist1a","inka1a","foxd3","sox10","hspg2","scn4ab","mcamb"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("32")) + ggtitle("Daniocell neural crest marker genes (neu 37,47)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+##
+
+DotPlot(Bestfishes, features = c("cmlc1","myl7","tnnc1a","myh7l","myh7","tnnt2a","tnni1b","nppa"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell cardiac muscle marker genes (musc 35)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("cmlc1","myl7","tnnc1a","myh7l","myh7","tnnt2a","tnni1b","nppa"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("25","27","45","44")) + ggtitle("Daniocell cardiac muscle marker genes (musc 35)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+###
+DotPlot(Bestfishes, features = c("lmo2","etv2","tal2","sox7","dusp5"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell endothelium marker genes (hema 19,21)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("lmo2","etv2","tal2","sox7","dusp5"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("24")) + ggtitle("Daniocell endothelium marker genes (hema 19,21)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+## 
+DotPlot(Bestfishes, features = c("tacc3","bub1ba","kif2c","prc1b","kif20a", "twist1a","tnn","cd248b","barx1","fibina", "fmoda","cks2"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell mesenchymal progenitors marker genes (mese1)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("tacc3","bub1ba","kif2c","prc1b","kif20a", "twist1a","tnn","cd248b","barx1","fibina", "fmoda","cks2"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("1","2")) + ggtitle("Daniocell mesenchymal progenitors marker genes (mese1)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+###
+
+DotPlot(Bestfishes, features = c("meox1","hoxc13b","cxcl12b","her7","twist1a","hoxc13a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell tailbud marker genes (musc29)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+
+###
+
+DotPlot(Bestfishes, features = c("egr2b","sox21","en2b","pax3a","fsta","egfl6","mapk12b","fgfr1b","dbx1a","dbx1b","sp8b","metrn","ago1","plp1a","sox21a", "robo4","nes"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell midbrain and hindbrain progenitors marker genes (neur 4,6)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("egr2b","sox21","en2b","pax3a","fsta","egfl6","mapk12b","fgfr1b","dbx1a","dbx1b","sp8b","metrn","ago1","plp1a","sox21a", "robo4","nes"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("0","14","33","9","5","12","19","29")) + ggtitle("Daniocell midbrain and hindbrain progenitors marker genes (neur 4,6)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+###
+DotPlot(Bestfishes, features = c("hemgn","cahz","slc4a1a","alas2","dmtn","rhd","urod","nt5c2l1","tfr1a"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell erythrocytes marker genes (hema5)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("hemgn","cahz","slc4a1a","alas2","dmtn","rhd","urod","nt5c2l1","tfr1a"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("8","17","22","11","21","29")) + ggtitle("Daniocell erythrocytes marker genes (hema5)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+###
+
+DotPlot(Bestfishes, features = c("rorb", "sox9b", "hes2.2","crabp1a","cldn5b","nr2e1","vsx2","fzd5","rx1"), cols = c("gold","deeppink"), assay = "SCT") + ggtitle("Daniocell retinal progenitors marker genes (eye3)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+DotPlot(Bestfishes, features = c("rorb", "sox9b", "hes2.2","crabp1a","cldn5b","nr2e1","vsx2","fzd5","rx1"), cols = c("cyan","green","hotpink"), assay = "SCT", split.by="fish", idents=c("3","13","43")) + ggtitle("Daniocell erythrocytes marker genes (hema5)") + theme(axis.text.x = element_text(angle=90, hjust=1, size=8, vjust=.35))
+
+
+```
+
+### Feature Plots by these zebrafish plots
+
+```{r, fig.width=10}
+pdf("240809_daniocell_endothelium_marker_sox7.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "sox7", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("sox7 expression, marker for zebrafish endothelium")
+dev.off()
+
+pdf("240809_daniocell_retinal_marker_vsx2.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "vsx2", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("vsx2 expression, marker for zebrafish retinal cells")
+dev.off()
+
+pdf("240809_daniocell_neural_marker_plp1a.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "plp1a", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("plp1a expression, marker for zebrafish neural cells")
+dev.off()
+
+pdf("240809_daniocell_neuralprogenitors_marker_plp1a.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "plp1a", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("plp1a expression, marker for zebrafish neural cells")
+dev.off()
+
+pdf("240809_daniocell_neuralprogenitors_marker_sox3.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "sox3", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("sox3 expression, marker for zebrafish neural cells")
+dev.off()
+
+pdf("240809_daniocell_somite_muscleproducing_marker_myog.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "myog", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("myog expression, marker for zebrafish somite (muscle progenitors) cells")
+dev.off()
+
+pdf("240809_daniocell_mesenchyme_marker_twist1a.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "twist1a", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("twist1a expression, marker for zebrafish mesenchymal cells")
+dev.off()
+
+pdf("240809_daniocell_cardiacmuscle_marker_cmlc1.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "cmlc1", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("cmlc1 expression, marker for zebrafish cardiac muscle cells")
+dev.off()
+
+pdf("240809_daniocell_erythrocytes_marker_cahz.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "cahz", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("cahz expression, marker for zebrafish erythrocytes cells")
+dev.off()
+
+pdf("240809_daniocell_pharyngealarch_marker_barx1.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "barx1", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("barx1 expression, marker for zebrafish pharyngeal arch cells")
+dev.off()
+
+pdf("240809_daniocell_pharyngealpouch_marker_egfl6.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "egfl6", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("egfl6 expression, marker for zebrafish pharyngeal pouch cells")
+dev.off()
+
+pdf("240809_daniocell_pigmentcell_marker_pts.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "pts", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("pts expression, marker for zebrafish pigment cells")
+dev.off()
+
+pdf("240809_daniocell_immunecell_marker_mpeg1.1.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "mpeg1.1", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("mpeg1.1 expression, marker for zebrafish immune cells")
+dev.off()
+
+pdf("240809_daniocell_lens_marker_cryba1b.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "cryba1b", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("cryba1b expression, marker for zebrafish lens cells")
+dev.off()
+
+pdf("240809_daniocell_presomitic_mesoderm_marker_meox1.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "meox1", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("meox1 expression, marker for zebrafish presomitic mesodermal cells")
+dev.off()
+
+pdf("240809_daniocell_periderm_marker_capn9.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "capn9", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("capn9 expression, marker for zebrafish peridermal cells")
+dev.off()
+
+pdf("240809_daniocell_epidermal_marker_tp63.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "tp63", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("tp63 expression, marker for zebrafish epidermal cells")
+dev.off()
+
+pdf("240809_daniocell_endodermal_marker_tfa.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "tfa", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("tfa expression, marker for zebrafish endodermal cells")
+dev.off()
+
+pdf("240809_daniocell_notochord_marker_col8a1a.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "col8a1a", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("col8a1a expression, marker for zebrafish notochord cells")
+dev.off()
+
+pdf("240809_daniocell_differentiatedneurons_marker_elavl3.pdf", width = 12, height = 6)
+FeaturePlot_scCustom(seurat_object = Bestfishes, reduction="cca.umap.40PCs",features = "elavl3", split.by = "fish", na_cutoff = 1.01, order=TRUE, label = TRUE) + ggtitle("elavl3 expression, marker for zebrafish neural cells")
+dev.off()
+```
+
+## Creating LISI plots by cluster
+
+```{r}
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, fish_scores), y=fish_scores, fill=seurat_clusters)) +  geom_boxplot() + theme(legend.position="none", text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) +scale_fill_manual(values=c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2", "lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")) + ylab("LISI Fish Integration Scores") + xlab("Clusters")
+
+pdf("240808_LISI_scores_by_cluster_boxplot.pdf", width = 10)
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, fish_scores), y=fish_scores, fill=seurat_clusters)) +  geom_boxplot() + theme(legend.position="none", text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) +scale_fill_manual(values=c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2", "lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")) + ylab("LISI Fish Integration Scores") + xlab("Clusters")
+dev.off()
+
+
+#####################################################################################################################
+
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, fish_scores), y=fish_scores, fill=fish)) +  geom_boxplot() + theme(text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) + xlab("Clusters") + ylab("LISI Fish Integration Scores") +scale_fill_manual(values=c("#0c64c4","#117733","#f82e99"))
+
+
+pdf("240808_LISI_scores_by_cluster_boxplot_byspecies.pdf", width = 20)
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, fish_scores), y=fish_scores, fill=fish)) +  geom_boxplot() + theme(text = element_text(size=16),
+        axis.text.x = element_text(angle=90, hjust=1, size=16, vjust=.35),
+        axis.text.y = element_text(size=16), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) + xlab("Clusters") + ylab("LISI Fish Integration Scores") +scale_fill_manual(values=c("#0c64c4","#117733","#f82e99"))
+dev.off()
+```
+
+```{r}
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, cluster_scores), y=cluster_scores, fill=seurat_clusters)) +  geom_boxplot() + theme(legend.position="none", text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) +scale_fill_manual(values=c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2", "lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")) + ylab("LISI Cluster Distinctness Scores") + xlab("Clusters")
+
+pdf("240808_LISI_cluster_distinctness_boxplot.pdf", width = 10)
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, cluster_scores), y=cluster_scores, fill=seurat_clusters)) +  geom_boxplot() + theme(legend.position="none", text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) +scale_fill_manual(values=c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2", "lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")) + ylab("LISI Cluster Distinctness Scores") + xlab("Clusters")
+dev.off()
+
+
+#####################################################################################################################
+
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, cluster_scores), y=cluster_scores, fill=fish)) +  geom_boxplot() + theme(text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) + xlab("Clusters") + ylab("LISI Cluster Distinctness Scores") +scale_fill_manual(values=c("#0c64c4","#117733","#f82e99"))
+
+
+pdf("240808_LISI_scores_cluster_distinctness_boxplot_byspecies.pdf", width = 20)
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters, cluster_scores), y=cluster_scores, fill=fish)) +  geom_boxplot() + theme(text = element_text(size=12),
+        axis.text.x = element_text(angle=90, hjust=1, size=12, vjust=.35),
+        axis.text.y = element_text(size=12), panel.background = element_rect(fill="white"), panel.grid.major = element_line(color = "grey85", linewidth = .35)) + xlab("Clusters") + ylab("LISI Cluster Distinctness Scores") +scale_fill_manual(values=c("#0c64c4","#117733","#f82e99"))
+dev.off()
+```
+

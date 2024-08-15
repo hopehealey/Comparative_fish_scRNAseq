@@ -1,0 +1,690 @@
+---
+title: "240418_Cluster_Analysis_40PCs_1.9res"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pulling in libraries
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(ggplot2)
+library(dplyr)
+library(scCustomize)
+library(dplyr)
+```
+
+## Loading files
+```{r}
+Bestfishes <- readRDS("240418_zebrafish_stickleback_pipefish_subsetted_integrated40_1.9res.rds")
+Lisiscores <- read.csv("240415_40PCs_1.9res_Integrated_dataset_CCAlisi_scores.csv")
+Bestfishes@meta.data$fish_scores <- Lisiscores$fish
+Bestfishes@meta.data$cluster_scores <- Lisiscores$seurat_clusters
+
+```
+
+## Overall atlas!
+
+```{r}
+
+levels(Bestfishes@meta.data$seurat_clusters)
+
+mycolors <- c("0"="dodgerblue","1"="purple3","2"="orchid3","3"="darkslategray1","4"="darkslategray4","5"="cornflowerblue","6"="aquamarine","7"="cadetblue2","8"="tomato1","9"="darkblue","10"="gray","11"="darkred","12"="deepskyblue2","13"="grey30","14"="darkturquoise","15"="darkorchid2","16"="maroon3","17"="firebrick2", "18" ="lightpink","19"="cadetblue1","20"="gold","21"="red","22"="salmon1","23"="rosybrown2","24"="maroon4","25"="limegreen","26"="thistle2","27"="olivedrab3","28"="lightcoral","29"="darkcyan","30"="seashell3","31"="aquamarine4","32"="cyan3","33"="lightblue2","34"="blue2","35"="mediumpurple1","36"="dodgerblue4","37"="darkslateblue","38"="sienna3","39"="tomato3","40"="sandybrown","41"="dodgerblue2","42"="lightgoldenrod2","43"="gray25","44"="springgreen4","45"="springgreen3","46"="gray0")
+
+my_cols2 <- mycolors[order(as.integer(names(mycolors)))]
+scales::show_col(my_cols2)
+
+pdf("UMAP_1.9res_47clusters.pdf")
+DimPlot(Bestfishes,
+        cols = my_cols2, label=TRUE, reduction="cca.umap.40PCs")
+dev.off()
+
+DimPlot(Bestfishes,
+        cols = my_cols2, label=FALSE, reduction="cca.umap.40PCs")
+```
+
+#### Stickleback only
+```{r}
+
+
+
+stickleback <- subset(Bestfishes, fish == "gac")
+
+levels(stickleback@meta.data$seurat_clusters)
+
+mycolors <- c("0"="dodgerblue","1"="purple3","2"="orchid3","3"="darkslategray1","4"="darkslategray4","5"="cornflowerblue","6"="aquamarine","7"="cadetblue2","8"="tomato1","9"="darkblue","10"="gray","11"="darkred","12"="deepskyblue2","13"="grey30","14"="darkturquoise","15"="darkorchid2","16"="maroon3","17"="firebrick2", "18" ="lightpink","19"="cadetblue1","20"="gold","21"="red","22"="salmon1","23"="rosybrown2","24"="maroon4","25"="limegreen","26"="thistle2","27"="olivedrab3","28"="lightcoral","29"="darkcyan","30"="seashell3","31"="aquamarine4","32"="cyan3","33"="lightblue2","34"="blue2","35"="mediumpurple1","36"="dodgerblue4","37"="darkslateblue","38"="sienna3","39"="tomato3","40"="sandybrown","41"="dodgerblue2","42"="lightgoldenrod2","43"="gray25","44"="springgreen4","45"="springgreen3","46"="gray0")
+
+my_cols2 <- mycolors[order(as.integer(names(mycolors)))]
+scales::show_col(my_cols2)
+
+pdf("UMAP_1.9res_47clusters_Gac_only.pdf")
+DimPlot(stickleback,
+        cols = my_cols2, label=TRUE, reduction="cca.umap.40PCs")
+dev.off()
+
+DimPlot(stickleback,
+        cols = my_cols2, label=FALSE, reduction="cca.umap.40PCs")
+```
+
+
+### Goal
+
+In the 240405_Cluster_Annotation file, I identified marker genes for each cluster and came up with initial cluster annotations (which are described in 240403_40PC_1.9res_noFilt_Cluster_Annotation file). Now, we can start to think about addressing some questions. 
+
+## Q1: Does success of integration vary by cell type? 
+
+There is considerable variation in species integration success based on cluster (i.e. cell type). There does not seem to be a strong trend whereby one class of cells has better or worse integration than another; however, overall, the connective tissue cells had some of the highest species integration scores. In particular, the pharyngeal arch cluster has the 6th highest distribution of species integration scores which suggests that these cells have integrated very well across species.
+
+```{r}
+mycolors2 <- c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2","lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")
+
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters,-fish_scores), y=fish_scores, fill=seurat_clusters)) + 
+    geom_boxplot() + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2)
+
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters,-fish_scores), y=fish_scores, fill=seurat_clusters)) + geom_boxplot() + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2) +
+     facet_wrap(~fish, ncol=1)
+
+```
+
+
+## Q2: Are certain cell types more prone to cluster "bleeding"? 
+
+Neural cells have the highest mixing of cells in high dimensional space.
+
+```{r}
+mycolors2 <- c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","tomato1","darkblue","gray","darkred","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","firebrick2","lightpink","cadetblue1","gold","red","salmon1","rosybrown2","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")
+
+ggplot(Bestfishes@meta.data, aes(x=reorder(seurat_clusters,-cluster_scores), y=cluster_scores, fill=seurat_clusters)) + 
+    geom_boxplot() + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2)
+
+```
+
+## Q3: How does the number of cells from each cluster vary by species?
+
+There is a *strong* difference between species. Notably, scovelli have a greater proportion of connective tissue cells than neural cells than both other species (and blood cells!). Cluster 15, somites, is relatively consistent across all species.  
+
+```{r, fig.width=6}
+num_cells <- as.data.frame(table(Bestfishes@meta.data$seurat_clusters, Bestfishes@meta.data$fish))
+colnames(num_cells) <- c("ClusterId","Species","NumCells")
+
+## adding in percentage of species atlas that originates from each cell type (each species has 10,938 cells)
+num_cells$SpeciesPercentages <- (num_cells$NumCells/10938)*100
+num_cells$SpeciesPercentages <- round(num_cells$SpeciesPercentages, 1)
+
+ggplot(num_cells, aes(x=ClusterId, y=NumCells, fill=ClusterId)) +
+  scale_fill_manual(values=mycolors2) + geom_bar(stat="identity") + facet_wrap(~Species, ncol=1) + theme(legend.position="none") +
+geom_text(aes(label = SpeciesPercentages),position=position_stack(vjust=.5))
+
+```
+
+### What about by sample?
+
+There is slight variation in cell numbers when examined by sample, but we still see the overall patterns holding.
+
+```{r, fig.width=6}
+num_cells <- as.data.frame(table(Bestfishes@meta.data$seurat_clusters, Bestfishes@meta.data$sample))
+colnames(num_cells) <- c("ClusterId","Sample","NumCells")
+
+## adding in percentage of species atlas that originates from each cell type (each sample has 5,469 cells)
+num_cells$SpeciesPercentages <- (num_cells$NumCells/5469)*100
+num_cells$SpeciesPercentages <- round(num_cells$SpeciesPercentages, 1)
+
+ggplot(num_cells, aes(x=ClusterId, y=NumCells, fill=ClusterId)) +
+  scale_fill_manual(values=mycolors2) + geom_bar(stat="identity") + facet_wrap(~Sample, ncol=1) + theme(legend.position="none") +
+geom_text(aes(label = SpeciesPercentages),position=position_stack(vjust=.5))
+
+write.csv(num_cells, "240708_number_cells_by_sample_by_celltype.csv")
+```
+
+### Could there be a shift in CNC fate in scovelli
+
+One observation from above is that scovelli have a larger percentage of pharyngeal arch cells, but seemingly have less CNC neural derived cells. Could there be a switch in fate? Focusing on the two NC derived clusters, we can see that stickleback and zebrafish have a similar number of neural NC cells and pharyngeal arch cells but that pipefish has very few NC derived neural cells. We can also observe that the total number of NC cells is similar between stickleback and pipefish (lower in zebrafish), highlighting that the proportion of these cells is different. 
+
+```{r}
+num_cells_NC <- num_cells[ num_cells$ClusterId %in% c("16","32"), ]
+
+ggplot(num_cells_NC, aes(x="", y=NumCells, fill=ClusterId)) +
+  geom_bar(stat="identity", width=1) + facet_wrap(~Sample, ncol=2) +
+  scale_fill_manual(values=c("maroon3","cyan3")) 
+```
+
+## Has there been a change in fgf family expression patterns in scovelli in the mesenchymal and NC cells?
+
+(Preliminarily) Yes! By observing the expression of fgf gene in particular, we see a unique set of fgf genes expressed in the arch. Notably, fgf3 is present in the arch of stickleback and zebrafish, but not pipefish (pipefish have lost this gene). Pipefish expresses some genes that are also found in stickleback and zebrafish, fgf10a, fgf20a, fgf20b, fgf13a, and fgf2, genes shared with stickleback, fgf22 and fgf7, and with zebrafish, fgf12b and fgf1b. However, there are some fgf genes uniquely expressed in the pipefish arch, fgf18a, fgf19, fgf12a, and fgf14. Zebrafish uniquely expresses fgf1a, and stickleback uniquely expresses fgf16. Our data suggests that scovelli expresses a unique suite of fgf ligands.
+
+** add in mapk pathway genes: pea3
+```{r, fig.width=5}
+###receptors
+DotPlot(Bestfishes, split.by = "fish",features = c("fgfr1a","fgfr1b","fgfr2","fgfr3","fgfr4","fgfrl1a","fgfrl1b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("FGFR family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## zgc_165461 is orthologous to fgfbp3, binding factors
+DotPlot(Bestfishes, split.by = "fish",features = c("fgfbp1a","fgfbp1b","fgfbp2a","fgfbp2b","zgc_165461"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("FGFBP family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## fgf9 is not present at all in the dataset, fgf ligands
+DotPlot(Bestfishes, split.by = "fish",features = c("fgf3","fgf7","fgf10a","fgf10b","fgf22","fgf16","fgf20a","fgf20b","fgf8a","fgf8b","fgf17","fgf18a","fgf18b","fgf19","fgf21","fgf23","fgf11a","fgf11b","fgf12a","fgf12b","fgf13a","fgf13b","fgf14","fgf1a","fgf1b","fgf2","fgf4","fgf6a","fgf6b","fgf5"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("FGF family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## Now just simplifying to the arch cluster for easier visualization
+DotPlot(Bestfishes, split.by = "fish",features = c("fgf3","fgf7","fgf10a","fgf10b","fgf22","fgf16","fgf20a","fgf20b","fgf8a","fgf8b","fgf17","fgf18a","fgf18b","fgf19","fgf21","fgf23","fgf11a","fgf11b","fgf12a","fgf12b","fgf13a","fgf13b","fgf14","fgf1a","fgf1b","fgf2","fgf4","fgf6a","fgf6b","fgf5"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = "16", dot.min = .01) + ggtitle("FGF family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+### looking at fgf23 and its cofactors since we see it uniquely expressed in the arch of syngnathids
+DotPlot(Bestfishes, features = c("fgf23", "kl","klb"), cols = c("cyan","green","hotpink"), assay = "SCT", dot.min = .01, idents=c("1","2","15","16","28","32","35"), split.by="fish") + ggtitle("fgf23 and partners expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## mapk interactors with fgf pathway
+DotPlot(Bestfishes, features = c("etv4", "sos1","sos2","hrasa","kras","nras","araf","raf1a","raf1b","map2k1","map2k2a","mapk1","mapk3"), cols = c("cyan","green","hotpink"), assay = "SCT", dot.min = .01, idents=c("1","2","15","16","28","32","35"), split.by="fish") + ggtitle("FGF-FGFR-RAS-ERK signaling pathway expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+### Has there been a change in other gene signaling families in gulf pipefish?
+
+First, wnt family! Referenced: https://web.stanford.edu/group/nusselab/cgi-bin/wnt/zebrafish, http://useast.ensembl.org/Danio_rerio/Gene/Compara_Paralog?db=core;g=ENSDARG00000058692;r=17:8498782-8570367, 
+
+We see some function partitioning with fgf5, whereby fgf5a is expressed in percomorphs but fgf5b is expressed in all three fishes (and fgf5a is properly assigned orthology wise!). There is no unique wnt ligand or wnt pathway interactor to the pharyneal arch NC cells, but frzb is weakly expressed in scovelli PA cells (and not in other species). fzd1 is not in gulf pipefish and likely no syngnathids.
+
+```{r, fig.width=5}
+### wnt ligands, LOC120829842 is wnt2bA from stickleback
+DotPlot(Bestfishes, split.by = "fish",features = c("wnt1","wnt2","wnt2ba","wnt2bb","LOC120829842","wnt3","wnt3a","wnt4a","wnt4b","wnt5a","wnt5b","wnt6a","wnt6b","wnt7aa","wnt7ab","wnt7ba","wnt7bb","wnt8a","wnt8-2","wnt8b","wnt9a","wnt9b","wnt10a","wnt10b","wnt11r","wnt11f2","wnt16"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Wnt family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+### wnt signaling pathway genes
+DotPlot(Bestfishes, split.by = "fish",features = c("dkk1a","dkk1b","dkk2","dkk3a","dkk3b","apc","apc2","wif1","waif2","sfrp1a","sfrp1b","sfrp2","sfrp2l","sfrp5","nkd1","nkd2b","lbh","lbhl","wls","szl"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Wnt Signaling pathway gene expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## wnt receptors
+DotPlot(Bestfishes, split.by = "fish",features = c("frzb","fzd1","fzd2","fzd3a", "fzd3b","fzd4","fzd5","fzd6","fzd7a","fzd7b","fzd8a","fzd8b","fzd9a","fzd9b","fzd10", "smo"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Wnt Signaling pathway gene expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+Next, bmp family! Similar to wnt, there is no gene that is only expressed in the scovelli pharyngeal arch NC cells. 
+
+```{r, fig.width=5}
+### bmp ligands
+DotPlot(Bestfishes, split.by = "fish",features = c("bmp4","bmp7b","bmp8a","bmp15","bmper","bmp7a","bmp1b","bmp10","bmp6","bmp1a","bmp2k","bmp3","bmp5","bmp16","bmp2b","bmp2a"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Bmp ligand family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+### bmp receptors
+DotPlot(Bestfishes, split.by = "fish",features = c("bmpr1bb","bmpr1ba","bmpr1aa","bmpr1ab","bmpr2a","bmpr2b","LOC120821714"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Bmp receptor family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+### smad genes 
+DotPlot(Bestfishes, split.by = "fish",features = c("smad1","smad5","smad9","smad2","smad3b","smad3a","smad10a","smad4a","smad6b","smad6a","smad7"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Smad genes expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Tgf-beta - tgfbr1b in all three, tgfbr1a only in zfish
+```{r}
+### tgfbeta ligands
+DotPlot(Bestfishes, split.by = "fish",features = c("tgfb1b","tgfb2","tgfb3","tgfbr1a","tgfbr1b","tgfbr2b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("tgf-beta ligand and receptor expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+And the hedgehog family! Again, nothing unique to scovelli.
+
+```{r, fig.width=5}
+### hedgehog ligands
+DotPlot(Bestfishes, split.by = "fish",features = c("shha","shhb","ihha","ihhb","dhh"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Hedgehog family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+### hedgehog receptors
+DotPlot(Bestfishes, split.by = "fish",features = c("ptch1","ptch2","b9d1"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Hedgehog receptor family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Lastly, notch!
+```{r}
+DotPlot(Bestfishes, split.by = "fish",features = c("dlc","dla","dld","dlb","dll4","jag1a","jag1b","jag2a","jag2b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Notch ligand expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(Bestfishes, split.by = "fish",features = c("notch1a","notch1b","notch2","notch3"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("Notch receptor expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+#### Overall Conclusions: The only gene family with genes that have different expression patterns in pharyngeal arch NC cells in the gulf pipefish is the FGF family. The pharyngeal epidermis has unique scovelli changes from fgf (fgf19, fgf23), wnt (wnt2ba,wnt3a, nkd2b), and bmp (bmp16) families. 
+
+## Q3.5: Are there changes in gene expression of hox family genes?
+
+Allison's thesis explored the loss of one of hoxa2b's enhancer. There is no unique hox expression to scovelli's in the arch.
+
+```{r, fig.width=5}
+DotPlot(Bestfishes, split.by = "fish",features = c("hoxc1a","hoxc4a","hoxc10a","hoxc5a","hoxc6a","hoxc8a","hoxc9a","hoxc11a","hoxc12a","hoxc13a","hoxa13b","hoxa11b","hoxa9b","hoxa2b","hoxa1a","hoxa3a","hoxa4a","hoxa5a","hoxa9a","hoxa11a","hoxa13a","hoxb9a","hoxb8a","hoxb3a","hoxb6a","hoxb5a","hoxb5b","hoxb1b","hoxd12a","hoxd11a","hoxd10a","hoxd9a","hoxd3a","hoxd4a","hoxc3a","hoxb13a","hoxb7a","hoxb10a","hoxb1a","hoxb8b","hoxc11b","hoxc12b","hoxc13b","hoxc6b"), cols = c("cyan","green","hotpink"), assay = "SCT", idents = c("1","2","15","16","28","32","35"), dot.min = .01) + ggtitle("hox family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(Bestfishes, split.by = "fish",features = c("hoxc1a","hoxc4a","hoxc10a","hoxc5a","hoxc6a","hoxc8a","hoxc9a","hoxc11a","hoxc12a","hoxc13a","hoxa13b","hoxa11b","hoxa9b","hoxa2b","hoxa1a","hoxa3a","hoxa4a","hoxa5a","hoxa9a","hoxa11a","hoxa13a","hoxb9a","hoxb8a","hoxb3a","hoxb6a","hoxb5a","hoxb5b","hoxb1b","hoxd12a","hoxd11a","hoxd10a","hoxd9a","hoxd3a","hoxd4a","hoxc3a","hoxb13a","hoxb7a","hoxb10a","hoxb1a","hoxb8b","hoxc11b","hoxc12b","hoxc13b","hoxc6b"), cols = c("cyan","green","hotpink"), assay = "SCT", dot.min = .01) + ggtitle("hox family expression within Connective Tissue and NC cells") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+## Q4: Are there genes that distinguish species for each cluster? Does the number of distinguishing genes for each cluster correlate with success of integration?
+
+First, focusing on the RNA layer and normalizing it specifically for differential gene expression analysis. 
+```{r}
+Bestfishes[["RNA"]] <- JoinLayers(Bestfishes[["RNA"]])
+DefaultAssay(Bestfishes) <- "RNA"
+Bestfishes <- NormalizeData(Bestfishes)
+Bestfishes <- FindVariableFeatures(Bestfishes, selection.method = "vst", nfeatures = 2000)
+Bestfishes <- ScaleData(Bestfishes, features = rownames(Bestfishes))
+
+Bestfishes$celltype.fish <- paste(Idents(Bestfishes), Bestfishes$fish, sep = "_")
+Bestfishes$celltype <- Idents(Bestfishes)
+Idents(Bestfishes) <- "celltype.fish"
+```
+
+Now, completing an initial pass at identifying differentially expressed genes between species identities.
+```{r}
+
+Clust16_ssc_v_dre <- FindMarkers(Bestfishes, ident.1 = "16_ssc", ident.2 = "16_dre", verbose = TRUE)
+Clust16_ssc_v_gac <- FindMarkers(Bestfishes, ident.1 = "16_ssc", ident.2 = "16_gac", verbose = TRUE)
+Clust16_gac_v_dre <- FindMarkers(Bestfishes, ident.1 = "16_gac", ident.2 = "16_dre", verbose = TRUE)
+
+```
+
+As we can see, there is a bit of a problem with this approach. There are thousands of differentially expressed genes because we allowed genes that were not 1:1:1 to persist in the analysis. Let's pull in the ortholog matching table.
+
+```{r}
+orthos <- read.table("../02_Orthology_Assignment/091523_genespace/28sp_genespace_nodots_USED_FOR_ANALYSIS/processed_pangenes/28sp_mergedspecies.tsv", header=TRUE, na.strings = c("", "NA"))
+all_111 <- na.omit(orthos)
+all_111 <- all_111[!grepl(",", all_111$Daniorerio), ]
+all_111 <- all_111[!grepl(",", all_111$Gasterosteusaculeatus), ]
+all_111 <- all_111[!grepl(",", all_111$Syngnathusscovelli), ]
+
+```
+
+Now, we can filter out any gene that is not 1:1:1 from the above lists.
+
+```{r}
+gene_ids_to_keep <- all_111$Daniorerio
+
+Clust16_gac_v_dre$genes <- rownames(Clust16_gac_v_dre)
+Clust16_gac_v_dre <- filter(Clust16_gac_v_dre, genes %in% gene_ids_to_keep)
+
+Clust16_ssc_v_dre$genes <- rownames(Clust16_ssc_v_dre)
+Clust16_ssc_v_dre <- filter(Clust16_ssc_v_dre, genes %in% gene_ids_to_keep)
+
+Clust16_ssc_v_gac$genes <- rownames(Clust16_ssc_v_gac)
+Clust16_ssc_v_gac <- filter(Clust16_ssc_v_gac, genes %in% gene_ids_to_keep)
+
+### genes that distinguish percomorphs
+Clust16_gac_v_dre_POSgac <- subset(Clust16_gac_v_dre, avg_log2FC>.1)
+Clust16_ssc_v_dre_POSssc<- subset(Clust16_ssc_v_dre, avg_log2FC>.1)
+perco_upregulated_genes <- filter(Clust16_gac_v_dre_POSgac, genes %in% Clust16_ssc_v_dre_POSssc$genes)$genes
+
+### genes that distinguish gulf pipefish
+Clust16_ssc_v_gac_POSssc <- subset(Clust16_ssc_v_gac, avg_log2FC>.1)
+pipe_upregulated_genes <- filter(Clust16_ssc_v_gac_POSssc, genes %in% Clust16_ssc_v_dre_POSssc$genes)$genes
+
+### genes that distinguish stickleback
+Clust16_ssc_v_gac_POSgac <- subset(Clust16_ssc_v_gac, avg_log2FC<(-.1))
+Stick_upregulated_genes <- filter(Clust16_ssc_v_gac_POSgac, genes %in% Clust16_gac_v_dre_POSgac$genes)$genes
+
+### genes that distinguish zebrafish
+Clust16_gac_v_dre_POSdre <- subset(Clust16_gac_v_dre, avg_log2FC<(-.1))
+Clust16_ssc_v_dre_POSdre<- subset(Clust16_ssc_v_dre, avg_log2FC<(-.1))
+zebra_upregulated_genes <- filter(Clust16_gac_v_dre_POSdre, genes %in% Clust16_ssc_v_dre_POSdre$genes)$genes
+
+### info for dataframe
+cluster <- rep("16",4)
+conditions <- c("Percomorphs","Up Pipefish","Up Stickleback","Up Zebrafish")
+NumGenes <- c(length(perco_upregulated_genes), length(pipe_upregulated_genes), length(Stick_upregulated_genes), length(zebra_upregulated_genes))
+
+##
+diff_gene_info <- data.frame(cluster, conditions, NumGenes)
+
+ggplot(data=diff_gene_info, aes(x=conditions, y=NumGenes, fill=cluster)) +
+  geom_bar(stat="identity")
+
+```
+
+This seems like a reasonable approach to comparing differentially expressed genes among species. Now we just need to make it into a loop! The question is whether our observation in the pharyngeal arch is an anomaly or whether it is seen across the board. We want to make two kinds of comparisons 1) species groupings and 2) inter-cluster comparisons across the same species. In this first box, we examined #1 and asked whether the number of differentially expressed genes varies by cluster when looking at species.
+
+Some specific questions that we can ask:
+1) Does scovelli have an increased number of differentially expressed genes for the pharyngeal arch cluster (#16) compared to all other clusters (comparing within scovelli up group)?
+2) Is there a species specific bias on a whole?
+
+Since this code is time consuming to run, I turned to talapas and ran it there instead (notably, I haven't been able to download presto on my laptop but have been able to install it there). we had to exclude clusters 39 and 44 from this analysis because there were less than 3 cells for one of the species.
+
+```{}
+Cluster_list <- seq(0,46,by=1) ## update to 46 after it works successfully
+Cluster_Diff_Exp_Genes <- data.frame()
+diff_gene_identities <- data.frame()
+
+for (i in Cluster_list) {
+print(i)
+i_ssc <- paste(i, "_ssc", sep="")
+i_gac <- paste(i, "_gac", sep="")
+i_dre <- paste(i, "_dre", sep="")
+Clusti_ssc_v_dre <- FindMarkers(Bestfishes, ident.1 = i_ssc, ident.2 = i_dre, verbose = TRUE)
+Clusti_ssc_v_gac <- FindMarkers(Bestfishes, ident.1 = i_ssc, ident.2 = i_gac, verbose = TRUE)
+Clusti_gac_v_dre <- FindMarkers(Bestfishes, ident.1 = i_gac, ident.2 = i_dre, verbose = TRUE)
+
+### Now filtering!
+Clusti_gac_v_dre$genes <- rownames(Clusti_gac_v_dre)
+Clusti_gac_v_dre <- filter(Clusti_gac_v_dre, genes %in% gene_ids_to_keep)
+Clusti_gac_v_dre <- subset(Clusti_gac_v_dre, p_val_adj<.05)
+
+Clusti_ssc_v_dre$genes <- rownames(Clusti_ssc_v_dre)
+Clusti_ssc_v_dre <- filter(Clusti_ssc_v_dre, genes %in% gene_ids_to_keep)
+Clusti_ssc_v_dre <- subset(Clusti_ssc_v_dre, p_val_adj<.05)
+
+Clusti_ssc_v_gac$genes <- rownames(Clusti_ssc_v_gac)
+Clusti_ssc_v_gac <- filter(Clusti_ssc_v_gac, genes %in% gene_ids_to_keep)
+Clusti_ssc_v_gac <- subset(Clusti_ssc_v_gac, p_val_adj<.05)
+
+### genes that distinguish percomorphs
+Clusti_gac_v_dre_POSgac <- subset(Clusti_gac_v_dre, avg_log2FC>1)
+Clusti_ssc_v_dre_POSssc<- subset(Clusti_ssc_v_dre, avg_log2FC>1)
+perco_upregulated_genes <- filter(Clusti_gac_v_dre_POSgac, genes %in% Clusti_ssc_v_dre_POSssc$genes)$genes
+
+### genes that distinguish gulf pipefish
+Clusti_ssc_v_gac_POSssc <- subset(Clusti_ssc_v_gac, avg_log2FC>1)
+pipe_upregulated_genes <- filter(Clusti_ssc_v_gac_POSssc, genes %in% Clusti_ssc_v_dre_POSssc$genes)$genes
+
+### genes that distinguish stickleback
+Clusti_ssc_v_gac_POSgac <- subset(Clusti_ssc_v_gac, avg_log2FC<(-1))
+Stick_upregulated_genes <- filter(Clusti_ssc_v_gac_POSgac, genes %in% Clusti_gac_v_dre_POSgac$genes)$genes
+
+### genes that distinguish zebrafish
+Clusti_gac_v_dre_POSdre <- subset(Clusti_gac_v_dre, avg_log2FC<(-1))
+Clusti_ssc_v_dre_POSdre<- subset(Clusti_ssc_v_dre, avg_log2FC<(-1))
+zebra_upregulated_genes <- filter(Clusti_gac_v_dre_POSdre, genes %in% Clusti_ssc_v_dre_POSdre$genes)$genes
+
+### info for dataframe
+cluster <- rep(i,4)
+conditions <- c("Up in Percomorphs","Up Pipefish","Up Stickleback","Up Zebrafish")
+NumGenes <- c(length(perco_upregulated_genes), length(pipe_upregulated_genes), length(Stick_upregulated_genes), length(zebra_upregulated_genes))
+
+## gene based database
+perco_upregulated_genes$conditions <- "Up in Percomorphs"
+pipe_upregulated_genes$conditions <- "Up Stickleback"
+Stick_upregulated_genes$conditions <- "Up Zebrafish"
+
+perco_upregulated_genes$clusterid <- i
+pipe_upregulated_genes$clusterid <- i
+Stick_upregulated_genes$clusterid <- i
+
+rbind(diff_gene_identities, perco_upregulated_genes,pipe_upregulated_genes,Stick_upregulated_genes)
+##
+diff_gene_info <- data.frame(cluster, conditions, NumGenes)
+
+Cluster_Diff_Exp_Genes <- rbind(Cluster_Diff_Exp_Genes, diff_gene_info)
+
+print(ggplot(data=diff_gene_info, aes(x=conditions, y=NumGenes, fill=cluster)) +
+  geom_bar(stat="identity"))
+}
+
+
+ggplot(data=Cluster_Diff_Exp_Genes, aes(x=conditions, y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity", position=position_dodge())
+
+```
+
+We can see some interesting patterns below, #1) there are very few genes that are solely up in stickleback or zebrafish, #2) there is a strong phylogenetic signal (i.e. lots of genes that are only up in percomorphs), and #3) pipefish has some clusters with lots of up regulated genes. I am not sure if we would find a statistical difference between cluster 16 and the rest of them, but the number of upregulated genes is high in cluster 16 compared to the majority of other clusters (9/47 clusters have similar numbers of upregulated genes).
+
+```{r}
+Cluster_Diff_Exp_Genes <- read.csv("240422_NumDiff_genes_bySpecies.csv")
+
+ggplot(data=Cluster_Diff_Exp_Genes, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2)
+
+## only looking at species data
+species <- c("Up Pipefish", "Up Stickleback", "Up Zebrafish")
+Cluster_Diff_Exp_Genes_sp_only <- subset(Cluster_Diff_Exp_Genes, conditions %in% species)
+
+ggplot(data=Cluster_Diff_Exp_Genes_sp_only, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) + geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2)
+```
+
+Next, I asked whether the number of uniquely expressed genes varied by cluster. I took the same approach as before but this type filtering genes to require specificity to 1 species (or clade in terms of percomorphs). Once, again, the phylogenetic signal is very strong! Similar to the other analysis, pipefish has the most amount of unique genes, and there is some hints that it is higher than "typical" in the pharyngeal arch cluster but it is not crazy out of the ordinary.
+
+```{r}
+Cluster_Uniq_Exp_Genes <- read.csv("240422_NumUniq_genes_bySpecies.csv")
+
+## looking at all comparisons
+ggplot(data=Cluster_Uniq_Exp_Genes, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2)
+
+## only looking at species data
+species <- c("Only in Pipefish", "Only in Stickleback", "Only in Zebrafish", "Only in short snouts")
+Cluster_Uniq_Exp_Genes_sp_only <- subset(Cluster_Uniq_Exp_Genes, conditions %in% species)
+
+ggplot(data=Cluster_Uniq_Exp_Genes_sp_only, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors2)
+```
+
+### Improving our analysis!
+
+With the initial run, each species had different numbers of cells contributing to the cluster. Perhaps, the number of cells may influence the results. We decided to re-do this approach with a normalization of the number of cells. I decided on a parameter of 100 cells per species. We will drop any cell type with below this threshold for each species. I also want to calculate these differences by sample to get a null expectation for change. 
+
+* I used the below code in my talapas script in combination with the diff exp code for the calculations
+
+```{r}
+set.seed(89)
+
+clusters <- seq(0,20,by=1)
+for (i in clusters) {
+  print(i)
+  clus_i <- subset(Bestfishes, seurat_clusters==i)
+  
+  clus_i_sp <- as.data.frame(table(clus_i$fish))
+  if (clus_i_sp$Freq[1]>=100 & clus_i_sp$Freq[2]>=100 & clus_i_sp$Freq[3]>=100) {
+    print("keep cluster for analysis")
+    
+    Idents(clus_i) <- "fish"
+    downsampled <- subset(clus_i, downsample=100)
+    
+    table(downsampled$fish)
+    
+downsampled[["RNA"]] <- JoinLayers(downsampled[["RNA"]])
+DefaultAssay(downsampled) <- "RNA"
+downsampled <- NormalizeData(downsampled)
+downsampled <- FindVariableFeatures(downsampled, selection.method = "vst", nfeatures = 2000)
+downsampled <- ScaleData(downsampled, features = rownames(downsampled))
+
+    Clusti_ssc_v_dre <- FindMarkers(downsampled, ident.1 = "ssc", ident.2 = "dre", verbose = TRUE)
+
+
+  }
+}
+
+```
+
+The below analysis contains 20 of the 47 clusters. For some of the clusters, particularly 6 and 7, equalizing the number of cells per species had a major impact in terms of number of differentially expressed pipefish genes (which is kind of interesting since pipefish had the fewest number of cells for these clusters). For the pharyngeal arch cluster, the number of identified genes stayed fairly high. Next, I want to find the exact identity of the genes included in these analyses.
+
+
+```{r}
+Cluster_Diff_Exp_Genes <- read.csv("240422_NumDiff_genes_bySpecies_100cellsPerspecies.csv")
+
+mycolors3 <- c("dodgerblue","purple3","orchid3","darkslategray1","darkslategray4","cornflowerblue","aquamarine","cadetblue2","darkblue","gray","deepskyblue2","grey30","darkturquoise","darkorchid2","maroon3","lightpink","cadetblue1","gold","maroon4","limegreen","thistle2","olivedrab3","lightcoral","darkcyan","seashell3","aquamarine4","cyan3","lightblue2","blue2","mediumpurple1","dodgerblue4","darkslateblue","sienna3","tomato3","sandybrown","dodgerblue2","lightgoldenrod2","gray25","springgreen4","springgreen3","gray0")
+
+
+ggplot(data=Cluster_Diff_Exp_Genes, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors3)
+
+## only looking at species data
+species <- c("Up Pipefish", "Up Stickleback", "Up Zebrafish")
+Cluster_Diff_Exp_Genes_sp_only <- subset(Cluster_Diff_Exp_Genes, conditions %in% species)
+
+ggplot(data=Cluster_Diff_Exp_Genes_sp_only, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) + geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors3)
+```
+
+
+```{r}
+Cluster_Uniq_Exp_Genes <- read.csv("240422_NumUniq_genes_bySpecies_100cellsPerspecies.csv")
+
+## looking at all comparisons
+ggplot(data=Cluster_Uniq_Exp_Genes, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors3)
+
+## only looking at species data
+species <- c("Only in Pipefish", "Only in Stickleback", "Only in Zebrafish")
+Cluster_Uniq_Exp_Genes_sp_only <- subset(Cluster_Uniq_Exp_Genes, conditions %in% species)
+
+ggplot(data=Cluster_Uniq_Exp_Genes_sp_only, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors3)
+
+pdf("240422_NumUniq_genes_bySpecies_100cellsPerspecies_species.pdf")
+ggplot(data=Cluster_Uniq_Exp_Genes_sp_only, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors3) + geom_text(aes(label = NumGenes),position=position_stack(vjust=1.25), size=2)
+dev.off()
+
+clade <- c("Only in Percomorphs", "Only in short snouts", "Only in Zebrafish and Pipefish")
+Cluster_Uniq_Exp_Genes_clade_only <- subset(Cluster_Uniq_Exp_Genes, conditions %in% clade)
+
+pdf("240422_NumUniq_genes_bySpecies_100cellsPerspecies_multicomp.pdf")
+ggplot(data=Cluster_Uniq_Exp_Genes_clade_only, aes(x=as.factor(cluster), y=NumGenes, fill=as.factor(cluster))) +
+  geom_bar(stat="identity") + facet_wrap(~conditions, ncol=1) + theme(legend.position="none") +
+  scale_fill_manual(values=mycolors3) + geom_text(aes(label = NumGenes),position=position_stack(vjust=1.25), size=2)
+dev.off()
+```
+
+## Now examining the actual genes 
+
+```{r}
+Initial_analysis_diff_Exp <- read.csv("240422_Diffexp_gene_identities_bySpecies.csv")
+Initial_analysis_uniq_genes <- read.csv("240422_Uniq_gene_identities_bySpecies.csv")
+NormalizedCellNums_diff_Exp <- read.csv("240422_DiffExp_gene_identities_bySpecies_100cellsPerspecies.csv")
+NormalizedCellNums_Uniq_genes <- read.csv("240422_NumUniq_genes_identites_bySpecies_100cellsPerspecies.csv")
+```
+
+Looking at the specific genes for the PA cluster shows that most of the genes are not unique to the PA cluster (minus ednrab which is up in zebrafish). This suggests that we likely aren't detecting shifts solely in the pharyngeal arch network, but in numerous cell types. It is clear that a few of these targets are not interesting, ex: cyldb (up in stickleback, pretty much every cluster) and ndufs... (up in most pipefish clusters). Suprisingly, fgf3 does not appear on any of these lists, it was filtered out during the process. A few of the pipefish genes seem especially interesting to see at this early stage, particularly ecrg4a and otos, becuase they are expressed in the PA region of zebrafish but at much later stages. 
+
+```{r, fig.height=10, fig.width=6}
+## PA
+PA_genesofint <- subset(NormalizedCellNums_Uniq_genes,conditions %in% species & clusterid==16)
+DotPlot(Bestfishes, features = PA_genesofint$genes, dot.min = .05, split.by = "fish", cols = c("cyan","green","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Indeed, looking at the UpSet plot, we can see that for the pipefish specific genes, there is overlap between many of the clusters. 
+
+```{r}
+library(ComplexHeatmap)
+ven_list2 <- list("Cluster 0"=subset(NormalizedCellNums_Uniq_genes, clusterid==0 & conditions=="Only in Pipefish")$genes, "Cluster 1"=subset(NormalizedCellNums_Uniq_genes, clusterid==1 & conditions=="Only in Pipefish")$genes, "Cluster 2"=subset(NormalizedCellNums_Uniq_genes, clusterid==2 & conditions=="Only in Pipefish")$genes, "Cluster 3"=subset(NormalizedCellNums_Uniq_genes, clusterid==3 & conditions=="Only in Pipefish")$genes, "Cluster 4"=subset(NormalizedCellNums_Uniq_genes, clusterid==4 & conditions=="Only in Pipefish")$genes, "Cluster 5"=subset(NormalizedCellNums_Uniq_genes, clusterid==5 & conditions=="Only in Pipefish")$genes,"Cluster 6"=subset(NormalizedCellNums_Uniq_genes, clusterid==6 & conditions=="Only in Pipefish")$genes,"Cluster 7"=subset(NormalizedCellNums_Uniq_genes, clusterid==7 & conditions=="Only in Pipefish")$genes,"Cluster 9"=subset(NormalizedCellNums_Uniq_genes, clusterid==9 & conditions=="Only in Pipefish")$genes,"Cluster 10"=subset(NormalizedCellNums_Uniq_genes, clusterid==10 & conditions=="Only in Pipefish")$genes,"Cluster 12"=subset(NormalizedCellNums_Uniq_genes, clusterid==12 & conditions=="Only in Pipefish")$genes,"Cluster 13"=subset(NormalizedCellNums_Uniq_genes, clusterid==13 & conditions=="Only in Pipefish")$genes,"Cluster 14"=subset(NormalizedCellNums_Uniq_genes, clusterid==14 & conditions=="Only in Pipefish")$genes,"Cluster 15"=subset(NormalizedCellNums_Uniq_genes, clusterid==15 & conditions=="Only in Pipefish")$genes,"Cluster 16"=subset(NormalizedCellNums_Uniq_genes, clusterid==16 & conditions=="Only in Pipefish")$genes,"Cluster 18"=subset(NormalizedCellNums_Uniq_genes, clusterid==18 & conditions=="Only in Pipefish")$genes,"Cluster 19"=subset(NormalizedCellNums_Uniq_genes, clusterid==19 & conditions=="Only in Pipefish")$genes,"Cluster 20"=subset(NormalizedCellNums_Uniq_genes, clusterid==20 & conditions=="Only in Pipefish")$genes,"Cluster 24"=subset(NormalizedCellNums_Uniq_genes, clusterid==24 & conditions=="Only in Pipefish")$genes,"Cluster 25"=subset(NormalizedCellNums_Uniq_genes, clusterid==25 & conditions=="Only in Pipefish")$genes)
+ven_list3 <- list_to_matrix(ven_list2)
+
+m1 = make_comb_mat(ven_list3)
+
+UpSet(m1, height=unit(7, "cm"))
+
+
+```
+
+When we look at only the genes detected as unique to pipefish for only 1 cluster, we still see wide expression of the genes across clusters (normalized cell list).
+
+```{r, fig.height=11, fig.width=8}
+Pipefish_only_genes_sol_to_1_cluster <- unique(subset(NormalizedCellNums_Uniq_genes, conditions=="Only in Pipefish")$genes)
+
+
+DotPlot(Bestfishes, features = Pipefish_only_genes_sol_to_1_cluster, dot.min = .05, split.by = "fish", cols = c("cyan","green","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+pdf("Pipefish_only_genes_sol_to_1_cluster.pdf", height=15, width=10)
+#DotPlot(Bestfishes, features = Pipefish_only_genes_sol_to_1_cluster, dot.min = .05, split.by = "fish", cols = c("cyan","green","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+Clustered_DotPlot(seurat_object = Bestfishes, features = Pipefish_only_genes_sol_to_1_cluster, x_lab_rotate = 90,  colors_use_idents = mycolors2)
+
+dev.off()
+
+pdf("Stickleback_only_genes_sol_to_1_cluster.pdf", height=15, width=10)
+Clustered_DotPlot(seurat_object = Bestfishes, features = unique(subset(NormalizedCellNums_Uniq_genes, conditions=="Only in Stickleback")$genes), x_lab_rotate = 90,  colors_use_idents = mycolors2)
+dev.off()
+
+pdf("Zebrafish_only_genes_sol_to_1_cluster.pdf", height=15, width=10)
+Clustered_DotPlot(seurat_object = Bestfishes, features = unique(subset(NormalizedCellNums_Uniq_genes, conditions=="Only in Zebrafish")$genes), x_lab_rotate = 90,  colors_use_idents = mycolors2)
+dev.off()
+
+pdf("Percomorph_only_genes_sol_to_1_cluster.pdf", height=15, width=10)
+Clustered_DotPlot(seurat_object = Bestfishes, features = unique(subset(NormalizedCellNums_Uniq_genes, conditions=="Only in Percomorphs")$genes), x_lab_rotate = 90,  colors_use_idents = mycolors2)
+dev.off()
+
+pdf("Shortsnout_only_genes_sol_to_1_cluster.pdf", height=15, width=10)
+Clustered_DotPlot(seurat_object = Bestfishes, features = unique(subset(NormalizedCellNums_Uniq_genes, conditions=="Only in Short Snouts")$genes), x_lab_rotate = 90,  colors_use_idents = mycolors2)
+dev.off()
+
+pdf("ZebraPipe_only_genes_sol_to_1_cluster.pdf", height=15, width=10)
+Clustered_DotPlot(seurat_object = Bestfishes, features = unique(subset(NormalizedCellNums_Uniq_genes, conditions=="Only in Zebrafish and Pipefish")$genes), x_lab_rotate = 90,  colors_use_idents = mycolors2)
+dev.off()
+```
+
+Genes not present in the PA of pipefish but in stickle and zebrafish (from the normalized cell list). None of these seem like good candidates, they are all abundantly expressed in the fish.
+
+```{r}
+DotPlot(Bestfishes, features = c("dynlt3","akr1a1b","cul3a"), dot.min = .05, split.by = "fish", cols = c("cyan","green","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Making a dot plot with a few of the candidate genes
+ 
+```{r, fig.width = 5}
+DotPlot(Bestfishes, features = c("podxl2","arhgap4a","ecrg4a","otos", "dynlt3", "akr1a1b", "cul3a","snai1a", "snai1b", "ednrab","ednraa","fgfbp2a","fgfbp2b","wnt5a","wnt5b"), dot.min = .01, split.by = "fish", cols = c("#117733", "#0c64c4", "#f82e99"), assay = "SCT", idents = c("1","2","15","16","28","32","35")) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+pdf("240708_candidate_genes_uniq_expression.pdf")
+DotPlot(Bestfishes, features = c("podxl2","arhgap4a","ecrg4a","otos", "dynlt3", "akr1a1b", "cul3a","snai1a", "snai1b", "ednrab","ednraa","fgfbp2a","fgfbp2b","wnt5a","wnt5b"), dot.min = .01, split.by = "fish", cols = c("#117733", "#0c64c4", "#f82e99"), assay = "SCT", idents = c("1","2","15","16","28","32","35")) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off()
+```
+
+### Detecting gene losses that could be relevant for the arch cluster??
+
+In the above approach, I filtered out any genes that were not 1:1:1 orthologs. I did this because we have species specific genes included in the analysis and I was concerned that they would be red herrings. However, that approach removes any genes whose protein coding sequence could be lost in syngnathids. Since we know that fgf3 is missing from syngnathids but is expressed in the arch, I wondered whether I could detect any other genes whose protein coding sequence is gone. These results must be taken with caution as a lack of detection by our ortholog tool does not mean the gene is missing!!! To do this analysis, I filtered out lines with missing ortholog data from stickleback and zebrafish but not pipefish. Then, ran find markers again (first with no normalization of cell numbers).
+
+```{r, fig.width=10, fig.height=12}
+orthos_no_NA_danio <- orthos[!is.na(orthos$Daniorerio),]
+orthos_noNA_stick <- orthos_no_NA_danio[!is.na(orthos_no_NA_danio$Gasterosteusaculeatus),]
+
+Orthos_allsscLosses <- orthos_noNA_stick[!grepl(",", orthos_noNA_stick$Daniorerio), ]
+Orthos_allsscLosses <- Orthos_allsscLosses[!grepl(",", Orthos_allsscLosses$Gasterosteusaculeatus), ]
+Orthos_allsscLosses <- Orthos_allsscLosses[!grepl(",", Orthos_allsscLosses$Syngnathusscovelli), ]
+
+Clust16_ssc_v_dre <- FindMarkers(Bestfishes, ident.1 = "16_ssc", ident.2 = "16_dre", verbose = TRUE)
+Clust16_ssc_v_gac <- FindMarkers(Bestfishes, ident.1 = "16_ssc", ident.2 = "16_gac", verbose = TRUE)
+Clust16_gac_v_dre <- FindMarkers(Bestfishes, ident.1 = "16_gac", ident.2 = "16_dre", verbose = TRUE)
+
+### Now filtering!
+Clust16_gac_v_dre$genes <- rownames(Clust16_gac_v_dre)
+Clust16_gac_v_dre <- filter(Clust16_gac_v_dre, genes %in% Orthos_allsscLosses$Daniorerio)
+Clust16_gac_v_dre <- subset(Clust16_gac_v_dre, p_val_adj<.05)
+
+
+Clust16_ssc_v_dre$genes <- rownames(Clust16_ssc_v_dre)
+Clust16_ssc_v_dre <- filter(Clust16_ssc_v_dre, genes %in% Orthos_allsscLosses$Daniorerio)
+Clust16_ssc_v_dre <- subset(Clust16_ssc_v_dre, p_val_adj<.05)
+
+Clust16_ssc_v_gac$genes <- rownames(Clust16_ssc_v_gac)
+Clust16_ssc_v_gac <- filter(Clust16_ssc_v_gac, genes %in% Orthos_allsscLosses$Daniorerio)
+Clust16_ssc_v_gac <- subset(Clust16_ssc_v_gac, p_val_adj<.05)
+
+### genes that are unique to fishes with short snouts
+Clust16_ssc_v_gac_ONLYgac <- subset(Clust16_ssc_v_gac, avg_log2FC<(-1) & pct.1==0)
+Clust16_ssc_v_dre_ONLYdre<- subset(Clust16_ssc_v_dre, avg_log2FC<(-1) & pct.1==0)
+
+shortsnouts_unique_genes <- filter(Clust16_ssc_v_gac_ONLYgac, genes %in% Clust16_ssc_v_dre_ONLYdre$genes)
+
+DotPlot(Bestfishes, features = shortsnouts_unique_genes$genes[1:30], dot.min = .05,cols = c("white","brown","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(Bestfishes, features = shortsnouts_unique_genes$genes[31:61], dot.min = .05,cols = c("white","brown","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(Bestfishes, features = shortsnouts_unique_genes$genes[62:100], dot.min = .05,cols = c("white","brown","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(Bestfishes, features = shortsnouts_unique_genes$genes[101:150], dot.min = .05,cols = c("white","brown","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(Bestfishes, features = shortsnouts_unique_genes$genes[150:196], dot.min = .05,cols = c("white","brown","hotpink"), assay = "SCT") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+## Exporting average expression
+```{r}
+pipefish_data <- subset(Bestfishes, fish=="ssc")
+pipefish_wholedataset <- AggregateExpression(pipefish_data, assays = "RNA") ### aggregates by identity
+pipefish_wholedataset_exp <- pipefish_wholedataset$RNA
+write.csv(pipefish_wholedataset_exp, "Dropbox (University of Oregon)/Hope_Dissertation_Folder/SingleCell/Cross_Species_Comparisons/06_Cluster_Analysis/240516_pipefish_avexp_bycluster.csv")
+
+stickleback_data <- subset(Bestfishes, fish=="gac")
+stickleback_wholedataset <- AggregateExpression(stickleback_data, assays = "RNA") ### aggregates by identity
+stickleback_wholedataset_exp <- stickleback_wholedataset$RNA
+write.csv(stickleback_wholedataset_exp, "240516_stickleback_avexp_bycluster.csv")
+
+zebrafish_data <- subset(Bestfishes, fish=="dre")
+zebrafish_wholedataset <- AggregateExpression(zebrafish_data, assays = "RNA") ### aggregates by identity
+zebrafish_wholedataset_exp <- zebrafish_wholedataset$RNA
+write.csv(zebrafish_wholedataset_exp, "240516_zebrafish_avexp_bycluster.csv")
+
+```
