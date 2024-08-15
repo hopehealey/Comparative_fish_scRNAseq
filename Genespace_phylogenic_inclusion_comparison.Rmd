@@ -1,0 +1,618 @@
+---
+title: "Genespace_results_exam"
+author: "Hope Healey"
+date: "9/15/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+simplify <- function(x) {
+    out <- ""
+    if (nchar(x)>0) {
+      split_value <- unlist(strsplit(x,","))
+    split_value2 <- gsub("\\[|\\]", "", split_value)
+    split_value3 <- gsub("\\'|\\'", "", split_value2)
+    split_value4 <- gsub(" ", "", split_value3)
+    split_value5 <- unique(split_value4)
+    split_value6 <- paste(split_value5, collapse=',')
+    out <- split_value6
+    }
+    return(out)
+}
+```
+
+### 3 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("3sp_genespace_nodots/processed_pangenes/3sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("3sp_genespace_nodots/processed_pangenes/3sp_acuelatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("3sp_genespace_nodots/processed_pangenes/3sp_scovelli_focal_pangenes_cleaned.txt")
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies3 <- data_frame_merge_nodups
+
+AllThreeGenes3 <- ThreeSpecies3[!(ThreeSpecies3$Daniorerio==""),]
+AllThreeGenes3 <- AllThreeGenes3[!(AllThreeGenes3$Gasterosteusaculeatus==""),]
+AllThreeGenes3 <- AllThreeGenes3[!(AllThreeGenes3$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes3), " orthogroups only found in all three fish."))
+
+AllThreeGenes3$Daniorerio <- sapply(AllThreeGenes3$Daniorerio, simplify)
+AllThreeGenes3$Gasterosteusaculeatus <- sapply(AllThreeGenes3$Gasterosteusaculeatus, simplify)
+AllThreeGenes3$Syngnathusscovelli <- sapply(AllThreeGenes3$Syngnathusscovelli, simplify)
+AllThreeGenes3 <- subset(AllThreeGenes3, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes3), " 1:1:1 orthogroups"))
+
+Rerio_only_genes3 <- ThreeSpecies3[(ThreeSpecies3$Gasterosteusaculeatus=="" & ThreeSpecies3$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes3), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes3 <- ThreeSpecies3[(ThreeSpecies3$Gasterosteusaculeatus=="" & ThreeSpecies3$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes3), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes3 <- ThreeSpecies3[(ThreeSpecies3$Syngnathusscovelli=="" & ThreeSpecies3$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes3), " orthogroups only found in Stickleback."))
+```
+
+### 5 way species 
+
+```{r}
+file1 <- read.delim("5sp_genespace_nodots/processed_pangenes/5sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("5sp_genespace_nodots/processed_pangenes/5sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("5sp_genespace_nodots/processed_pangenes/5sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies5 <- data_frame_merge_nodups
+
+AllThreeGenes5 <- ThreeSpecies5[!(ThreeSpecies5$Daniorerio==""),]
+AllThreeGenes5 <- AllThreeGenes5[!(AllThreeGenes5$Gasterosteusaculeatus==""),]
+AllThreeGenes5 <- AllThreeGenes5[!(AllThreeGenes5$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes5), " orthogroups only found in all three fish."))
+
+AllThreeGenes5$Daniorerio <- sapply(AllThreeGenes5$Daniorerio, simplify)
+AllThreeGenes5$Gasterosteusaculeatus <- sapply(AllThreeGenes5$Gasterosteusaculeatus, simplify)
+AllThreeGenes5$Syngnathusscovelli <- sapply(AllThreeGenes5$Syngnathusscovelli, simplify)
+AllThreeGenes5 <- subset(AllThreeGenes5, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes5), " 1:1:1 orthogroups"))
+
+
+
+Rerio_only_genes5 <- ThreeSpecies5[(ThreeSpecies5$Gasterosteusaculeatus=="" & ThreeSpecies5$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes5), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes5 <- ThreeSpecies5[(ThreeSpecies5$Gasterosteusaculeatus=="" & ThreeSpecies5$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes5), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes5 <- ThreeSpecies5[(ThreeSpecies5$Syngnathusscovelli=="" & ThreeSpecies5$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes5), " orthogroups only found in Stickleback."))
+```
+
+### 10 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("10sp_genespace_nodots/processed_pangenes/10sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("10sp_genespace_nodots/processed_pangenes/10sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("10sp_genespace_nodots/processed_pangenes/10sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies10 <- data_frame_merge_nodups
+
+AllThreeGenes10 <- ThreeSpecies10[!(ThreeSpecies10$Daniorerio==""),]
+AllThreeGenes10 <- AllThreeGenes10[!(AllThreeGenes10$Gasterosteusaculeatus==""),]
+AllThreeGenes10 <- AllThreeGenes10[!(AllThreeGenes10$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes10), " orthogroups only found in all three fish."))
+
+AllThreeGenes10$Daniorerio <- sapply(AllThreeGenes10$Daniorerio, simplify)
+AllThreeGenes10$Gasterosteusaculeatus <- sapply(AllThreeGenes10$Gasterosteusaculeatus, simplify)
+AllThreeGenes10$Syngnathusscovelli <- sapply(AllThreeGenes10$Syngnathusscovelli, simplify)
+AllThreeGenes10 <- subset(AllThreeGenes10, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes10), " 1:1:1 orthogroups"))
+
+Rerio_only_genes10 <- ThreeSpecies10[(ThreeSpecies10$Gasterosteusaculeatus=="" & ThreeSpecies10$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes10), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes10 <- ThreeSpecies10[(ThreeSpecies10$Gasterosteusaculeatus=="" & ThreeSpecies10$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes10), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes10 <- ThreeSpecies10[(ThreeSpecies10$Syngnathusscovelli=="" & ThreeSpecies10$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes10), " orthogroups only found in Stickleback."))
+```
+
+
+### 14 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("14sp_genespace_nodots/processed_pangenes/14sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("14sp_genespace_nodots/processed_pangenes/14sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("14sp_genespace_nodots/processed_pangenes/14sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies14 <- data_frame_merge_nodups
+
+AllThreeGenes14 <- ThreeSpecies14[!(ThreeSpecies14$Daniorerio==""),]
+AllThreeGenes14 <- AllThreeGenes14[!(AllThreeGenes14$Gasterosteusaculeatus==""),]
+AllThreeGenes14 <- AllThreeGenes14[!(AllThreeGenes14$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes14), " orthogroups only found in all three fish."))
+
+AllThreeGenes14$Daniorerio <- sapply(AllThreeGenes14$Daniorerio, simplify)
+AllThreeGenes14$Gasterosteusaculeatus <- sapply(AllThreeGenes14$Gasterosteusaculeatus, simplify)
+AllThreeGenes14$Syngnathusscovelli <- sapply(AllThreeGenes14$Syngnathusscovelli, simplify)
+AllThreeGenes14 <- subset(AllThreeGenes14, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes14), " 1:1:1 orthogroups"))
+
+
+
+Rerio_only_genes14 <- ThreeSpecies14[(ThreeSpecies14$Gasterosteusaculeatus=="" & ThreeSpecies14$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes14), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes14 <- ThreeSpecies14[(ThreeSpecies14$Gasterosteusaculeatus=="" & ThreeSpecies14$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes14), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes14 <- ThreeSpecies14[(ThreeSpecies14$Syngnathusscovelli=="" & ThreeSpecies14$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes14), " orthogroups only found in Stickleback."))
+```
+
+### 18 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("18sp_genespace_nodots/processed_pangenes/18sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("18sp_genespace_nodots/processed_pangenes/18sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("18sp_genespace_nodots/processed_pangenes/18sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies18 <- data_frame_merge_nodups
+
+AllThreeGenes18 <- ThreeSpecies18[!(ThreeSpecies18$Daniorerio==""),]
+AllThreeGenes18 <- AllThreeGenes18[!(AllThreeGenes18$Gasterosteusaculeatus==""),]
+AllThreeGenes18 <- AllThreeGenes18[!(AllThreeGenes18$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes18), " orthogroups only found in all three fish."))
+
+AllThreeGenes18$Daniorerio <- sapply(AllThreeGenes18$Daniorerio, simplify)
+AllThreeGenes18$Gasterosteusaculeatus <- sapply(AllThreeGenes18$Gasterosteusaculeatus, simplify)
+AllThreeGenes18$Syngnathusscovelli <- sapply(AllThreeGenes18$Syngnathusscovelli, simplify)
+AllThreeGenes18 <- subset(AllThreeGenes18, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes18), " 1:1:1 orthogroups"))
+
+
+Rerio_only_genes18 <- ThreeSpecies18[(ThreeSpecies18$Gasterosteusaculeatus=="" & ThreeSpecies18$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes18), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes18 <- ThreeSpecies18[(ThreeSpecies18$Gasterosteusaculeatus=="" & ThreeSpecies18$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes18), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes18 <- ThreeSpecies18[(ThreeSpecies18$Syngnathusscovelli=="" & ThreeSpecies18$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes18), " orthogroups only found in Stickleback."))
+```
+
+### 22 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("22sp_genespace_nodots/processed_pangenes/22sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("22sp_genespace_nodots/processed_pangenes/22sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("22sp_genespace_nodots/processed_pangenes/22sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies22 <- data_frame_merge_nodups
+
+AllThreeGenes22 <- ThreeSpecies22[!(ThreeSpecies22$Daniorerio==""),]
+AllThreeGenes22 <- AllThreeGenes22[!(AllThreeGenes22$Gasterosteusaculeatus==""),]
+AllThreeGenes22 <- AllThreeGenes22[!(AllThreeGenes22$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes22), " orthogroups only found in all three fish."))
+
+AllThreeGenes22$Daniorerio <- sapply(AllThreeGenes22$Daniorerio, simplify)
+AllThreeGenes22$Gasterosteusaculeatus <- sapply(AllThreeGenes22$Gasterosteusaculeatus, simplify)
+AllThreeGenes22$Syngnathusscovelli <- sapply(AllThreeGenes22$Syngnathusscovelli, simplify)
+AllThreeGenes22 <- subset(AllThreeGenes22, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes22), " 1:1:1 orthogroups"))
+
+
+Rerio_only_genes22 <- ThreeSpecies22[(ThreeSpecies22$Gasterosteusaculeatus=="" & ThreeSpecies22$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes22), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes22 <- ThreeSpecies22[(ThreeSpecies22$Gasterosteusaculeatus=="" & ThreeSpecies22$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes22), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes22 <- ThreeSpecies22[(ThreeSpecies22$Syngnathusscovelli=="" & ThreeSpecies22$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes22), " orthogroups only found in Stickleback."))
+```
+
+### 26 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("26sp_genespace_nodots/processed_pangenes/26sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("26sp_genespace_nodots/processed_pangenes/26sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("26sp_genespace_nodots/processed_pangenes/26sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies26 <- data_frame_merge_nodups
+
+AllThreeGenes26 <- ThreeSpecies26[!(ThreeSpecies26$Daniorerio==""),]
+AllThreeGenes26 <- AllThreeGenes26[!(AllThreeGenes26$Gasterosteusaculeatus==""),]
+AllThreeGenes26 <- AllThreeGenes26[!(AllThreeGenes26$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes26), " orthogroups only found in all three fish."))
+
+AllThreeGenes26$Daniorerio <- sapply(AllThreeGenes26$Daniorerio, simplify)
+AllThreeGenes26$Gasterosteusaculeatus <- sapply(AllThreeGenes26$Gasterosteusaculeatus, simplify)
+AllThreeGenes26$Syngnathusscovelli <- sapply(AllThreeGenes26$Syngnathusscovelli, simplify)
+AllThreeGenes26 <- subset(AllThreeGenes26, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes26), " 1:1:1 orthogroups"))
+
+Rerio_only_genes26 <- ThreeSpecies26[(ThreeSpecies26$Gasterosteusaculeatus=="" & ThreeSpecies26$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes26), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes26 <- ThreeSpecies26[(ThreeSpecies26$Gasterosteusaculeatus=="" & ThreeSpecies26$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes26), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes26 <- ThreeSpecies26[(ThreeSpecies26$Syngnathusscovelli=="" & ThreeSpecies26$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes26), " orthogroups only found in Stickleback."))
+```
+
+### 28 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("28sp_genespace_nodots_USED_FOR_ANALYSIS//processed_pangenes/28sp_rerio_focal_pangenes_cleaned.txt")
+file2 <- read.delim("28sp_genespace_nodots_USED_FOR_ANALYSIS//processed_pangenes/28sp_aculeatus_focal_pangenes_cleaned.txt")
+file3 <- read.delim("28sp_genespace_nodots_USED_FOR_ANALYSIS//processed_pangenes/28sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies28 <- data_frame_merge_nodups
+
+AllThreeGenes28 <- ThreeSpecies28[!(ThreeSpecies28$Daniorerio==""),]
+AllThreeGenes28 <- AllThreeGenes28[!(AllThreeGenes28$Gasterosteusaculeatus==""),]
+AllThreeGenes28 <- AllThreeGenes28[!(AllThreeGenes28$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes28), " orthogroups only found in all three fish."))
+
+AllThreeGenes28$Daniorerio <- sapply(AllThreeGenes28$Daniorerio, simplify)
+AllThreeGenes28$Gasterosteusaculeatus <- sapply(AllThreeGenes28$Gasterosteusaculeatus, simplify)
+AllThreeGenes28$Syngnathusscovelli <- sapply(AllThreeGenes28$Syngnathusscovelli, simplify)
+AllThreeGenes28 <- subset(AllThreeGenes28, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes28), " 1:1:1 orthogroups"))
+
+Rerio_only_genes28 <- ThreeSpecies28[(ThreeSpecies28$Gasterosteusaculeatus=="" & ThreeSpecies28$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes28), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes28 <- ThreeSpecies28[(ThreeSpecies28$Gasterosteusaculeatus=="" & ThreeSpecies28$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes28), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes28 <- ThreeSpecies28[(ThreeSpecies28$Syngnathusscovelli=="" & ThreeSpecies28$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes28), " orthogroups only found in Stickleback."))
+```
+
+### 29 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("29sp_genespace_nodots/processed_pangenes/29sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("29sp_genespace_nodots/processed_pangenes/29sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("29sp_genespace_nodots/processed_pangenes/29sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies29 <- data_frame_merge_nodups
+
+AllThreeGenes29 <- ThreeSpecies29[!(ThreeSpecies29$Daniorerio==""),]
+AllThreeGenes29 <- AllThreeGenes29[!(AllThreeGenes29$Gasterosteusaculeatus==""),]
+AllThreeGenes29 <- AllThreeGenes29[!(AllThreeGenes29$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes29), " orthogroups only found in all three fish."))
+
+AllThreeGenes29$Daniorerio <- sapply(AllThreeGenes29$Daniorerio, simplify)
+AllThreeGenes29$Gasterosteusaculeatus <- sapply(AllThreeGenes29$Gasterosteusaculeatus, simplify)
+AllThreeGenes29$Syngnathusscovelli <- sapply(AllThreeGenes29$Syngnathusscovelli, simplify)
+AllThreeGenes29 <- subset(AllThreeGenes29, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes29), " 1:1:1 orthogroups"))
+
+Rerio_only_genes29 <- ThreeSpecies29[(ThreeSpecies29$Gasterosteusaculeatus=="" & ThreeSpecies29$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes29), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes29 <- ThreeSpecies29[(ThreeSpecies29$Gasterosteusaculeatus=="" & ThreeSpecies29$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes29), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes29 <- ThreeSpecies29[(ThreeSpecies29$Syngnathusscovelli=="" & ThreeSpecies29$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes29), " orthogroups only found in Stickleback."))
+```
+
+### 30 way species
+
+```{r, message=FALSE}
+file1 <- read.delim("30sp_genespace_nodots/processed_pangenes/30sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("30sp_genespace_nodots/processed_pangenes/30sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("30sp_genespace_nodots/processed_pangenes/30sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+ThreeSpecies30 <- data_frame_merge_nodups
+
+AllThreeGenes30 <- ThreeSpecies30[!(ThreeSpecies30$Daniorerio==""),]
+AllThreeGenes30 <- AllThreeGenes30[!(AllThreeGenes30$Gasterosteusaculeatus==""),]
+AllThreeGenes30 <- AllThreeGenes30[!(AllThreeGenes30$Syngnathusscovelli==""),]
+
+cat(paste0("There are ", nrow(AllThreeGenes30), " orthogroups only found in all three fish."))
+
+AllThreeGenes30$Daniorerio <- sapply(AllThreeGenes30$Daniorerio, simplify)
+AllThreeGenes30$Gasterosteusaculeatus <- sapply(AllThreeGenes30$Gasterosteusaculeatus, simplify)
+AllThreeGenes30$Syngnathusscovelli <- sapply(AllThreeGenes30$Syngnathusscovelli, simplify)
+AllThreeGenes30 <- subset(AllThreeGenes30, Daniorerio != "NA" & Syngnathusscovelli != "NA" & Gasterosteusaculeatus != "NA")
+
+cat(paste0("There are ", nrow(AllThreeGenes30), " 1:1:1 orthogroups"))
+
+Rerio_only_genes30 <- ThreeSpecies30[(ThreeSpecies30$Gasterosteusaculeatus=="" & ThreeSpecies30$Syngnathusscovelli==""),]
+cat(paste0(" There are ", nrow(Rerio_only_genes30), " orthogroups only found in zebrafish."))
+
+Scovelli_only_genes30 <- ThreeSpecies30[(ThreeSpecies30$Gasterosteusaculeatus=="" & ThreeSpecies30$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Scovelli_only_genes30), " orthogroups only found in gulf pipefish."))
+
+Gasterous_only_genes30 <- ThreeSpecies30[(ThreeSpecies30$Syngnathusscovelli=="" & ThreeSpecies30$Daniorerio==""),]
+cat(paste0(" There are ", nrow(Gasterous_only_genes30), " orthogroups only found in Stickleback."))
+```
+
+### Accuracy estimation
+
+```{r}
+ground_truth <- read.csv("ground_truth_orthologs.csv")
+
+### Testing accuracy with our ground truth!
+accuracy_test <- function(dataframe1, groundtruth) {
+   only_dre <- subset(dataframe1, dataframe1$Gasterosteusaculeatus=="")
+   only_dre_genes <- subset(groundtruth, groundtruth$Stickle.gene.name=="")
+   
+   only_gac <- subset(dataframe1, dataframe1$Daniorerio=="")
+   only_gac_genes <- subset(groundtruth, groundtruth$Zebrafish.gene.name=="")
+   
+   AllTwoGenes <- dataframe1[!(dataframe1$Daniorerio==""),]
+   AllTwoGenes <- AllTwoGenes[!(AllTwoGenes$Gasterosteusaculeatus==""),]
+   both_genes <- groundtruth[!(groundtruth$Stickle.gene.name==""),]
+   both_genes <- both_genes[!(both_genes$Zebrafish.gene.name==""),]
+   
+   gene_tested <- c()
+   gene_found_correctly <- c() 
+   gene_category <- c()
+  
+   for (gene in only_dre_genes$Zebrafish.gene.name) {
+     gene <- gsub(" ", "", gene)
+     correct <- gene %in% only_dre$Daniorerio
+     gene_tested <- append(gene_tested, gene)
+     gene_found_correctly <- append(gene_found_correctly, correct)
+     gene_category_index <- which(ground_truth$Zebrafish.gene.name==gene)
+     gene_category <- append(gene_category, ground_truth$Type[gene_category_index])
+   }
+   
+   for (gene in only_gac_genes$Stickle.gene.name) {
+     gene <- gsub(" ", "", gene)
+     correct <- gene %in% only_gac$Gasterosteusaculeatus
+     gene_tested <- append(gene_tested, gene)
+     gene_found_correctly <- append(gene_found_correctly, correct)
+     gene_category_index <- which(ground_truth$Stickle.gene.name==gene)
+     gene_category <- append(gene_category, ground_truth$Type[gene_category_index])
+   }
+   
+   for (gene in both_genes$Zebrafish.gene.name) {
+     gene <- gsub(" ", "", gene)
+     correct <- gene %in% AllTwoGenes$Daniorerio
+     gene_tested <- append(gene_tested, gene)
+     gene_found_correctly <- append(gene_found_correctly, correct)
+     gene_category_index <- which(ground_truth$Zebrafish.gene.name==gene)
+     gene_category <- append(gene_category, ground_truth$Type[gene_category_index])
+   }
+   
+  gene_results <- data.frame(gene_tested, gene_found_correctly, gene_category)
+  return(gene_results)
+}
+####################
+# 3
+ThreeSpecies3$Daniorerio <- sapply(ThreeSpecies3$Daniorerio, simplify)
+ThreeSpecies3$Gasterosteusaculeatus <- sapply(ThreeSpecies3$Gasterosteusaculeatus, simplify)
+ThreeSpecies3$Syngnathusscovelli <- sapply(ThreeSpecies3$Syngnathusscovelli, simplify)
+accuracy3 <- accuracy_test(ThreeSpecies3, ground_truth)
+accuracy3_filtered <- subset(accuracy3, gene_found_correctly==TRUE)
+
+# 5
+ThreeSpecies5$Daniorerio <- sapply(ThreeSpecies5$Daniorerio, simplify)
+ThreeSpecies5$Gasterosteusaculeatus <- sapply(ThreeSpecies5$Gasterosteusaculeatus, simplify)
+ThreeSpecies5$Syngnathusscovelli <- sapply(ThreeSpecies5$Syngnathusscovelli, simplify)
+accuracy5 <- accuracy_test(ThreeSpecies5, ground_truth)
+accuracy5_filtered <- subset(accuracy5, gene_found_correctly==TRUE)
+
+# 10
+ThreeSpecies10$Daniorerio <- sapply(ThreeSpecies10$Daniorerio, simplify)
+ThreeSpecies10$Gasterosteusaculeatus <- sapply(ThreeSpecies10$Gasterosteusaculeatus, simplify)
+ThreeSpecies10$Syngnathusscovelli <- sapply(ThreeSpecies10$Syngnathusscovelli, simplify)
+accuracy10 <- accuracy_test(ThreeSpecies10, ground_truth)
+accuracy10_filtered <- subset(accuracy10, gene_found_correctly==TRUE)
+
+# 14
+ThreeSpecies14$Daniorerio <- sapply(ThreeSpecies14$Daniorerio, simplify)
+ThreeSpecies14$Gasterosteusaculeatus <- sapply(ThreeSpecies14$Gasterosteusaculeatus, simplify)
+ThreeSpecies14$Syngnathusscovelli <- sapply(ThreeSpecies14$Syngnathusscovelli, simplify)
+accuracy14 <- accuracy_test(ThreeSpecies14, ground_truth)
+accuracy14_filtered <- subset(accuracy14, gene_found_correctly==TRUE)
+
+# 18
+ThreeSpecies18$Daniorerio <- sapply(ThreeSpecies18$Daniorerio, simplify)
+ThreeSpecies18$Gasterosteusaculeatus <- sapply(ThreeSpecies18$Gasterosteusaculeatus, simplify)
+ThreeSpecies18$Syngnathusscovelli <- sapply(ThreeSpecies18$Syngnathusscovelli, simplify)
+accuracy18 <- accuracy_test(ThreeSpecies18, ground_truth)
+accuracy18_filtered <- subset(accuracy18, gene_found_correctly==TRUE)
+
+# 22
+ThreeSpecies22$Daniorerio <- sapply(ThreeSpecies22$Daniorerio, simplify)
+ThreeSpecies22$Gasterosteusaculeatus <- sapply(ThreeSpecies22$Gasterosteusaculeatus, simplify)
+ThreeSpecies22$Syngnathusscovelli <- sapply(ThreeSpecies22$Syngnathusscovelli, simplify)
+accuracy22 <- accuracy_test(ThreeSpecies22, ground_truth)
+accuracy22_filtered <- subset(accuracy22, gene_found_correctly==TRUE)
+
+
+# 26
+ThreeSpecies26$Daniorerio <- sapply(ThreeSpecies26$Daniorerio, simplify)
+ThreeSpecies26$Gasterosteusaculeatus <- sapply(ThreeSpecies26$Gasterosteusaculeatus, simplify)
+ThreeSpecies26$Syngnathusscovelli <- sapply(ThreeSpecies26$Syngnathusscovelli, simplify)
+accuracy26 <- accuracy_test(ThreeSpecies26, ground_truth)
+accuracy26_filtered <- subset(accuracy26, gene_found_correctly==TRUE)
+
+# 28
+ThreeSpecies28$Daniorerio <- sapply(ThreeSpecies28$Daniorerio, simplify)
+ThreeSpecies28$Gasterosteusaculeatus <- sapply(ThreeSpecies28$Gasterosteusaculeatus, simplify)
+ThreeSpecies28$Syngnathusscovelli <- sapply(ThreeSpecies28$Syngnathusscovelli, simplify)
+accuracy28 <- accuracy_test(ThreeSpecies28, ground_truth)
+accuracy28_filtered <- subset(accuracy28, gene_found_correctly==TRUE)
+
+# 29
+ThreeSpecies29$Daniorerio <- sapply(ThreeSpecies29$Daniorerio, simplify)
+ThreeSpecies29$Gasterosteusaculeatus <- sapply(ThreeSpecies29$Gasterosteusaculeatus, simplify)
+ThreeSpecies29$Syngnathusscovelli <- sapply(ThreeSpecies29$Syngnathusscovelli, simplify)
+accuracy29 <- accuracy_test(ThreeSpecies29, ground_truth)
+accuracy29_filtered <- subset(accuracy29, gene_found_correctly==TRUE)
+
+
+# 30
+ThreeSpecies30$Daniorerio <- sapply(ThreeSpecies30$Daniorerio, simplify)
+ThreeSpecies30$Gasterosteusaculeatus <- sapply(ThreeSpecies30$Gasterosteusaculeatus, simplify)
+ThreeSpecies30$Syngnathusscovelli <- sapply(ThreeSpecies30$Syngnathusscovelli, simplify)
+accuracy30 <- accuracy_test(ThreeSpecies30, ground_truth)
+accuracy30_filtered <- subset(accuracy30, gene_found_correctly==TRUE)
+
+
+overall_names <- c("3sp","5sp","10sp","14sp","18sp","22sp","26sp","28sp", "29sp","30sp")
+overall_accuracy <- c(sum(accuracy3$gene_found_correctly),sum(accuracy5$gene_found_correctly),sum(accuracy10$gene_found_correctly),sum(accuracy14$gene_found_correctly, na.rm=TRUE),sum(accuracy18$gene_found_correctly, na.rm=TRUE),sum(accuracy22$gene_found_correctly, na.rm=TRUE),sum(accuracy26$gene_found_correctly, na.rm=TRUE),sum(accuracy28$gene_found_correctly, na.rm=TRUE), sum(accuracy29$gene_found_correctly, na.rm=TRUE), sum(accuracy30$gene_found_correctly, na.rm=TRUE))
+overall_accuracy_dataframe <- data.frame(overall_names, overall_accuracy)
+
+library(ggplot2)
+ggplot(data=overall_accuracy_dataframe, aes(x=overall_names, y=overall_accuracy,fill=overall_names)) +
+  geom_bar(stat="identity", width=0.5) + ggtitle("Number of Correctly Id'd Genes") + theme(legend.position="none") + scale_x_discrete(limits = overall_names) + xlab("") + ylab("Number of Orthogroups") + geom_hline(yintercept=51)
+
+####################
+accuracy3_filtered$runid <- "3sp"
+accuracy10_filtered$runid <- "10sp"
+accuracy5_filtered$runid <- "5sp"
+accuracy14_filtered$runid <- "14sp"
+accuracy18_filtered$runid <- "18sp"
+accuracy22_filtered$runid <- "22sp"
+accuracy26_filtered$runid <- "26sp"
+accuracy28_filtered$runid <- "28sp"
+accuracy29_filtered$runid <- "29sp"
+accuracy30_filtered$runid <- "30sp"
+
+
+allruns <- rbind(accuracy3_filtered, accuracy5_filtered, accuracy10_filtered, accuracy14_filtered, accuracy18_filtered,accuracy22_filtered,accuracy26_filtered,accuracy28_filtered, accuracy29_filtered, accuracy30_filtered)
+
+ggplot(allruns, aes(x=runid, fill=gene_category)) + geom_bar() + scale_x_discrete(limits = overall_names) 
+
+```
+
+
+### Pulling it all together
+
+```{r}
+genespace_1 <- c(nrow(AllThreeGenes3), nrow(AllThreeGenes5), nrow(AllThreeGenes10), nrow(AllThreeGenes14), nrow(AllThreeGenes18), nrow(AllThreeGenes22),nrow(AllThreeGenes26),nrow(AllThreeGenes28),nrow(AllThreeGenes29),nrow(AllThreeGenes30))
+
+genespace_z <- c(nrow(Rerio_only_genes3), nrow(Rerio_only_genes5), nrow(Rerio_only_genes10), nrow(Rerio_only_genes14), nrow(Rerio_only_genes18), nrow(Rerio_only_genes22),nrow(Rerio_only_genes26),nrow(Rerio_only_genes28),nrow(Rerio_only_genes29),nrow(Rerio_only_genes30))
+
+genespace_s <- c(nrow(Gasterous_only_genes3), nrow(Gasterous_only_genes5), nrow(Gasterous_only_genes10), nrow(Gasterous_only_genes14), nrow(Gasterous_only_genes18), nrow(Gasterous_only_genes22),nrow(Gasterous_only_genes26),nrow(Gasterous_only_genes28),nrow(Gasterous_only_genes29),nrow(Gasterous_only_genes30))
+
+genespace_p <- c(nrow(Scovelli_only_genes3), nrow(Scovelli_only_genes5), nrow(Scovelli_only_genes10), nrow(Scovelli_only_genes14), nrow(Scovelli_only_genes18), nrow(Scovelli_only_genes22),nrow(Scovelli_only_genes26),nrow(Scovelli_only_genes28),nrow(Scovelli_only_genes29),nrow(Scovelli_only_genes30))
+
+genespace_labels <- c("3sp", "5sp", "10sp", "14sp", "18sp", "22sp", "26sp", "28sp","29sp","30sp")
+
+genespace_results <- data.frame(genespace_labels, genespace_1, genespace_z, genespace_s, genespace_p)
+
+library(ggplot2)
+ggplot(data=genespace_results, aes(x=genespace_labels, y=genespace_1, fill=genespace_labels)) +
+  geom_bar(stat="identity", width=0.5) + ggtitle("Number of 1:1:1 Orthogroups Identified in All 3 Species") + theme(legend.position="none") + scale_x_discrete(limits = genespace_labels) + xlab("") + ylab("Number of Orthogroups")
+
+ggplot(data=genespace_results, aes(x=genespace_labels, y=genespace_z,fill=genespace_labels)) +
+  geom_bar(stat="identity", width=0.5) + ggtitle("Number of Unique Orthogroups to Zebrafish") + theme(legend.position="none") + scale_x_discrete(limits = genespace_labels) + xlab("") + ylab("Number of Orthogroups")
+
+ggplot(data=genespace_results, aes(x=genespace_labels, y=genespace_s,fill=genespace_labels)) +
+  geom_bar(stat="identity", width=0.5) + ggtitle("Number of Unique Orthogroups to Stickleback") + theme(legend.position="none") + scale_x_discrete(limits = genespace_labels) + xlab("") + ylab("Number of Orthogroups")
+
+ggplot(data=genespace_results, aes(x=genespace_labels, y=genespace_p,fill=genespace_labels)) +
+  geom_bar(stat="identity", width=0.5) + ggtitle("Number of Unique Orthogroups to Pipefish") + theme(legend.position="none") + scale_x_discrete(limits = genespace_labels) + xlab("") + ylab("Number of Orthogroups")
+```
+
+
+### Outputting the chosen matrix: 28 species!
+
+```{r}
+
+file1 <- read.delim("28sp_genespace_nodots/processed_pangenes/28sp_rerio_focal_pangenes_cleaned.txt")
+
+file2 <- read.delim("28sp_genespace_nodots/processed_pangenes/28sp_aculeatus_focal_pangenes_cleaned.txt")
+
+file3 <- read.delim("28sp_genespace_nodots/processed_pangenes/28sp_scovelli_focal_pangenes_cleaned.txt")
+
+data_frame_merge <- merge(file1, file2, all = TRUE)
+data_frame_merge <- merge(data_frame_merge, file3, all = TRUE)
+data_frame_merge_nodups <- data_frame_merge[!duplicated(data_frame_merge$og),]
+
+AllThreeGenes28_output <- data_frame_merge_nodups
+
+AllThreeGenes28_output$Daniorerio <- sapply(AllThreeGenes28_output$Daniorerio, simplify)
+AllThreeGenes28_output$Gasterosteusaculeatus <- sapply(AllThreeGenes28_output$Gasterosteusaculeatus, simplify)
+AllThreeGenes28_output$Syngnathusscovelli <- sapply(AllThreeGenes28_output$Syngnathusscovelli, simplify)
+
+
+
+write.table(AllThreeGenes28_output, "28sp_genespace_nodots/processed_pangenes/28sp_mergedspecies.tsv", row.names = FALSE, sep='\t')
+```
+
